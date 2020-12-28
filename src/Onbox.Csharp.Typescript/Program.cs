@@ -88,7 +88,7 @@ namespace Onbox.Csharp.Typescript
                 if (! type.IsPublic)
                     continue;
 
-                processedTypes(type, fileName);
+                ProcessType(type, output);
             }
         }
 
@@ -108,16 +108,22 @@ namespace Onbox.Csharp.Typescript
 
         private static string ProcessController(TypeDefinition type, string path)
         {
-            Console.WriteLine($"Mapping Controller: {type.Name}");
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
 
+            classBodyBuilder.AppendLine("import { Injectable } from '@angular/core';");
+            classBodyBuilder.AppendLine("import { Observable } from 'rxjs';");
+            classBodyBuilder.AppendLine("import { HttpClient } from '@angular/common/http';");
+            classBodyBuilder.AppendLine("import { environment } from '@env/environment';");
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine("@Injectable({");
             classBodyBuilder.AppendLine("   providedIn: 'root'");
             classBodyBuilder.AppendLine("})");
             classBodyBuilder.AppendLine($"export class {GetDefinition(type).Replace("Controller", "Service")}" + " {");
+            classBodyBuilder.AppendLine();
+            classBodyBuilder.AppendLine("  constructor(private http: HttpClient) { }");
+
             var meths = type.Methods;
             foreach (var meth in meths)
             {
@@ -134,7 +140,7 @@ namespace Onbox.Csharp.Typescript
             classBodyBuilder.AppendLine("}");
             var result = importStatments.Any() ? importStatments + Environment.NewLine + classBodyBuilder.ToString() : classBodyBuilder.ToString();
 
-            //SaveTypescript(type, path, result);
+            SaveTypescript(type, path, result);
 
             processedTypes.Add(type);
             return result;
@@ -146,12 +152,16 @@ namespace Onbox.Csharp.Typescript
             {
                 return ProcessEnum(type, path);
             }
-            else if (type.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Contains("ApiController")) != null)
+            else if (type.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Contains("ApiControllerAttribute")) != null)
             {
                 return ProcessController(type, path);
             }
+            else if (!type.IsValueType)
+            {
+                return ProcessClass(type, path);
+            }
 
-            return ProcessClass(type, path);
+            return null;
         }
 
         private static string ProcessEnum(TypeDefinition type, string path)
@@ -204,7 +214,7 @@ namespace Onbox.Csharp.Typescript
                         ProcessType(prop.DeclaringType, path);
                     }
                 }
-                classBodyBuilder.AppendLine($"   {prop.Name.ToLower()}: {GetPropType(prop.DeclaringType)};");
+                classBodyBuilder.AppendLine($"   {prop.Name.ToLower()}: {GetPropType(prop.PropertyType)};");
             }
             classBodyBuilder.AppendLine("}");
 
@@ -252,7 +262,7 @@ namespace Onbox.Csharp.Typescript
             return $"{type.Name.Replace("`1", "<T>")}";
         }
 
-        private static string GetPropType(TypeDefinition type)
+        private static string GetPropType(TypeReference type)
         {
             if (type.FullName == typeof(string).FullName || type.FullName == typeof(DateTime).FullName || type.FullName == typeof(DateTimeOffset).FullName)
             {
@@ -262,7 +272,7 @@ namespace Onbox.Csharp.Typescript
             {
                 return "number";
             }
-            else if (type.Interfaces.Any(type => type.InterfaceType.FullName == typeof(IList).FullName))
+            else if (type.IsArray)
             {
                 var att = type.GenericParameters.LastOrDefault();
                 return $"{att.Name}[]";
@@ -272,12 +282,10 @@ namespace Onbox.Csharp.Typescript
                 var att = type.GenericParameters.LastOrDefault();
                 return $"{type.Name.Replace("`1", "")}<{att.Name}>";
             }
-            else if (type.IsClass)
+            else
             {
                 return type.Name;
             }
-
-            return null;
         }
     }
 }
