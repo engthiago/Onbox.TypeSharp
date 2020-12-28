@@ -29,7 +29,7 @@ namespace Onbox.Csharp.Typescript
         }
 
         private static Dictionary<Type, string> imports = new Dictionary<Type, string>();
-        private static HashSet<Type> processedTypes = new HashSet<Type>();
+        private static HashSet<TypeDefinition> processedTypes = new HashSet<TypeDefinition>();
 
         private static string output;
 
@@ -69,7 +69,7 @@ namespace Onbox.Csharp.Typescript
                 Task.Delay(300);
                 try
                 {
-                    WriteTypes(e.FullPath);
+                    WriteAssemblyTypes(e.FullPath);
                 }
                 catch (Exception ex)
                 {
@@ -80,7 +80,7 @@ namespace Onbox.Csharp.Typescript
             });
         }
 
-        private static void PrintTypes(string fileName)
+        private static void WriteAssemblyTypes(string fileName)
         {
             ModuleDefinition module = ModuleDefinition.ReadModule(fileName);
             foreach (TypeDefinition type in module.Types)
@@ -88,11 +88,11 @@ namespace Onbox.Csharp.Typescript
                 if (! type.IsPublic)
                     continue;
 
-                Console.WriteLine(type.FullName);
+                processedTypes(type, fileName);
             }
         }
 
-        public static byte[] GetBytes(Stream input)
+        private static byte[] GetBytes(Stream input)
         {
             byte[] buffer = new byte[16 * 1024];
             using (MemoryStream stream = new MemoryStream())
@@ -106,55 +106,22 @@ namespace Onbox.Csharp.Typescript
             }
         }
 
-        private static void WriteTypes(string fullPath)
-        {
-            using (FileStream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
-            {
-                //var byteArr = GetBytes(stream);
-                //var assembly = Assembly.Load(byteArr);
-
-                var assembly = Assembly.LoadFrom(fullPath);
-                var types = assembly.GetTypes();
-
-                var controllers = types
-                    .Where(t => t.Name.Contains("Controller"));
-
-                foreach (var controller in controllers)
-                {
-                    if (! processedTypes.Contains(controller))
-                    {
-                        ProcessController(controller, output);
-                    }
-                }
-
-                var models = types
-                    .Where(t => t.GetConstructors().Where(c => c.IsPublic && c.GetParameters().Length == 0).Any() || t.IsEnum);
-
-                foreach (var type in models)
-                {
-                    if (! processedTypes.Contains(type))
-                    {
-                        ProcessType(type, output);
-                    }
-                }
-            }
-        }
-
-        private static string ProcessController(Type type, string path)
+        private static string ProcessController(TypeDefinition type, string path)
         {
             Console.WriteLine($"Mapping Controller: {type.Name}");
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
+
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine("@Injectable({");
             classBodyBuilder.AppendLine("   providedIn: 'root'");
             classBodyBuilder.AppendLine("})");
             classBodyBuilder.AppendLine($"export class {GetDefinition(type).Replace("Controller", "Service")}" + " {");
-            var meths = type.GetMethods();
+            var meths = type.Methods;
             foreach (var meth in meths)
             {
-                var attr = meth.GetCustomAttributes();
+                var attr = meth.CustomAttributes;
                 if (attr.FirstOrDefault(a => a.GetType().Name.Contains("HttpGet")) != null)
                 {
                     var responseAttrs = attr.Where(a => a.GetType().Name.Contains("ProducesResponseType"));
@@ -173,21 +140,25 @@ namespace Onbox.Csharp.Typescript
             return result;
         }
 
-        private static string ProcessType(Type type, string path)
+        private static string ProcessType(TypeDefinition type, string path)
         {
             if (type.IsEnum)
             {
                 return ProcessEnum(type, path);
             }
+            else if (type.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Contains("ApiController")) != null)
+            {
+                return ProcessController(type, path);
+            }
 
             return ProcessClass(type, path);
         }
 
-        private static string ProcessEnum(Type type, string path)
+        private static string ProcessEnum(TypeDefinition type, string path)
         {
             var enumBodyBuilder = new StringBuilder();
 
-            var values = type.GetEnumValues();
+            var values = type.Fields;
 
             enumBodyBuilder.AppendLine();
             enumBodyBuilder.AppendLine($"export enum {GetDefinition(type)}" + " {");
@@ -204,20 +175,20 @@ namespace Onbox.Csharp.Typescript
             return result;
         }
 
-        private static string ProcessClass(Type type, string path)
+        private static string ProcessClass(TypeDefinition type, string path)
         {
             var importStatments = string.Empty;
 
             var classBodyBuilder = new StringBuilder();
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var props = type.Properties;
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine($"export interface {GetDefinition(type)}" + " {");
             foreach (var prop in props)
             {
-                if (ShouldImport(prop.PropertyType) && prop.PropertyType != type)
+                if (ShouldImport(prop.DeclaringType) && prop.PropertyType != type)
                 {
-                    var importStatement = $"import {{ {GetImportName(prop.PropertyType)} }} from \"./{GetImportName(prop.PropertyType)}\"";
+                    var importStatement = $"import {{ {GetImportName(prop.DeclaringType)} }} from \"./{GetImportName(prop.DeclaringType)}\"";
                     
                     if (importStatments == string.Empty)
                     {
@@ -230,10 +201,10 @@ namespace Onbox.Csharp.Typescript
 
                     if (!processedTypes.Contains(prop.PropertyType))
                     {
-                        ProcessType(prop.PropertyType, path);
+                        ProcessType(prop.DeclaringType, path);
                     }
                 }
-                classBodyBuilder.AppendLine($"   {prop.Name.ToLower()}: {GetPropType(prop.PropertyType)};");
+                classBodyBuilder.AppendLine($"   {prop.Name.ToLower()}: {GetPropType(prop.DeclaringType)};");
             }
             classBodyBuilder.AppendLine("}");
 
@@ -246,7 +217,7 @@ namespace Onbox.Csharp.Typescript
             return result;
         }
 
-        private static void SaveTypescript(Type type, string path, string content)
+        private static void SaveTypescript(TypeDefinition type, string path, string content)
         {
             var fileName = GetImportName(type);
             var enumPart = type.IsEnum ? ".enum" : "";
@@ -254,16 +225,16 @@ namespace Onbox.Csharp.Typescript
             File.WriteAllText(fullPath, content, Encoding.UTF8);
         }
 
-        private static bool ShouldImport(Type type)
+        private static bool ShouldImport(TypeDefinition type)
         {
-            var constructor = type.GetConstructor(Type.EmptyTypes);
-            if (constructor == null)
+            var isClass = type.IsClass;
+            if (isClass)
             {
                 return false;
             }
             else
             {
-                if (type.GetInterfaces().Any(type => type == typeof(IList)))
+                if (type.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IList).FullName))
                 {
                     return false;
                 }
@@ -271,34 +242,34 @@ namespace Onbox.Csharp.Typescript
             }
         }
 
-        private static string GetImportName(Type type)
+        private static string GetImportName(TypeDefinition type)
         {
             return $"{type.Name.Replace("`1", "")}";
         }
 
-        private static string GetDefinition(Type type)
+        private static string GetDefinition(TypeDefinition type)
         {
             return $"{type.Name.Replace("`1", "<T>")}";
         }
 
-        private static string GetPropType(Type type)
+        private static string GetPropType(TypeDefinition type)
         {
-            if (type == typeof(string) || type == typeof(DateTime) || type == typeof(DateTimeOffset))
+            if (type.FullName == typeof(string).FullName || type.FullName == typeof(DateTime).FullName || type.FullName == typeof(DateTimeOffset).FullName)
             {
                 return "string";
             }
-            else if (type == typeof(int) || type == typeof(double) || type == typeof(float))
+            else if (type.FullName == typeof(int).FullName || type.FullName == typeof(double).FullName || type.FullName == typeof(float).FullName)
             {
                 return "number";
             }
-            else if (type.GetInterfaces().Any(type => type == typeof(IList)))
+            else if (type.Interfaces.Any(type => type.InterfaceType.FullName == typeof(IList).FullName))
             {
-                var att = type.GetGenericArguments().LastOrDefault();
+                var att = type.GenericParameters.LastOrDefault();
                 return $"{att.Name}[]";
             }
-            else if (type.IsGenericType)
+            else if (type.HasGenericParameters)
             {
-                var att = type.GetGenericArguments().LastOrDefault();
+                var att = type.GenericParameters.LastOrDefault();
                 return $"{type.Name.Replace("`1", "")}<{att.Name}>";
             }
             else if (type.IsClass)
