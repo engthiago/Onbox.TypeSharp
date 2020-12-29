@@ -29,7 +29,7 @@ namespace Onbox.Csharp.Typescript
         }
 
         private static Dictionary<Type, string> imports = new Dictionary<Type, string>();
-        private static HashSet<TypeDefinition> processedTypes = new HashSet<TypeDefinition>();
+        private static HashSet<TypeReference> processedTypes = new HashSet<TypeReference>();
 
         private static string output;
 
@@ -106,7 +106,7 @@ namespace Onbox.Csharp.Typescript
             }
         }
 
-        private static string ProcessController(TypeDefinition type, string path)
+        private static string ProcessController(TypeReference type, string path)
         {
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
@@ -124,7 +124,7 @@ namespace Onbox.Csharp.Typescript
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine("  constructor(private http: HttpClient) { }");
 
-            var meths = type.Methods;
+            var meths = type.Resolve().Methods;
             foreach (var meth in meths)
             {
                 var attr = meth.CustomAttributes;
@@ -142,17 +142,18 @@ namespace Onbox.Csharp.Typescript
 
             SaveTypescript(type, path, result);
 
-            processedTypes.Add(type);
             return result;
         }
 
-        private static string ProcessType(TypeDefinition type, string path)
+        private static string ProcessType(TypeReference type, string path)
         {
-            if (type.IsEnum)
+            processedTypes.Add(type);
+
+            if (type.Resolve()?.IsEnum == true)
             {
-                return ProcessEnum(type, path);
+                return ProcessEnum(type.Resolve(), path);
             }
-            else if (type.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Contains("ApiControllerAttribute")) != null)
+            else if (type.Resolve()?.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Contains("ApiControllerAttribute")) != null)
             {
                 return ProcessController(type, path);
             }
@@ -185,12 +186,17 @@ namespace Onbox.Csharp.Typescript
             return result;
         }
 
-        private static string ProcessClass(TypeDefinition type, string path)
+        private static string ProcessClass(TypeReference type, string path)
         {
             var importStatments = string.Empty;
 
             var classBodyBuilder = new StringBuilder();
-            var props = type.Properties;
+            var props = type.Resolve()?.Properties;
+
+            if (props == null)
+            {
+                return null;
+            }
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine($"export interface {GetDefinition(type)}" + " {");
@@ -198,7 +204,7 @@ namespace Onbox.Csharp.Typescript
             {
                 if (ShouldImport(prop.PropertyType) && prop.PropertyType != type)
                 {
-                    var importStatement = $"import {{ {GetImportName(prop.PropertyType)} }} from \"./{GetImportName(prop.PropertyType)}\"";
+                    var importStatement = $"import {{ {GetImportName(prop.PropertyType)} }} from \"./{GetImportName(prop.PropertyType)}\";";
                     
                     if (importStatments == string.Empty)
                     {
@@ -211,7 +217,7 @@ namespace Onbox.Csharp.Typescript
 
                     if (!processedTypes.Contains(prop.PropertyType))
                     {
-                        ProcessType(prop.DeclaringType, path);
+                        ProcessType(prop.PropertyType, path);
                     }
                 }
                 classBodyBuilder.AppendLine($"   {prop.Name.ToLower()}: {GetPropType(prop.PropertyType)};");
@@ -222,34 +228,40 @@ namespace Onbox.Csharp.Typescript
 
             SaveTypescript(type, path, result);
 
-            processedTypes.Add(type);
 
             return result;
         }
 
-        private static void SaveTypescript(TypeDefinition type, string path, string content)
+        private static void SaveTypescript(TypeReference type, string path, string content)
         {
             var fileName = GetImportName(type);
-            var enumPart = type.IsEnum ? ".enum" : "";
-            var fullPath = Path.Combine(path, fileName + enumPart + ".ts");
+            var fullPath = Path.Combine(path, fileName + ".ts");
             File.WriteAllText(fullPath, content, Encoding.UTF8);
         }
 
         private static bool ShouldImport(TypeReference type)
         {
-            var valueType = type.IsValueType;
-            if (! valueType)
+            if (type.FullName.StartsWith("System"))
             {
                 return false;
             }
-            else
+
+            if (type.IsValueType)
             {
-                if (type.IsArray)
-                {
-                    return false;
-                }
-                return true;
+                return false;
             }
+
+            if (type.IsPrimitive)
+            {
+                return false;
+            }
+
+            if (type.FullName == typeof(string).FullName)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static string GetImportName(TypeReference type)
@@ -257,7 +269,7 @@ namespace Onbox.Csharp.Typescript
             return $"{type.Name.Replace("`1", "")}";
         }
 
-        private static string GetDefinition(TypeDefinition type)
+        private static string GetDefinition(TypeReference type)
         {
             return $"{type.Name.Replace("`1", "<T>")}";
         }
@@ -272,19 +284,19 @@ namespace Onbox.Csharp.Typescript
             {
                 return "number";
             }
-            else if (type.IsArray)
+            else if (type.FullName.StartsWith("System.Collections.Generic"))
             {
-                var att = type.GenericParameters.LastOrDefault();
+                var att = type.Resolve().GenericParameters.First();
                 return $"{att.Name}[]";
             }
-            else if (type.HasGenericParameters)
+            else if (type.ContainsGenericParameter)
             {
                 var att = type.GenericParameters.LastOrDefault();
                 return $"{type.Name.Replace("`1", "")}<{att.Name}>";
             }
             else
             {
-                return type.Name;
+                return type.Name.Replace("`1", ""); ;
             }
         }
     }
