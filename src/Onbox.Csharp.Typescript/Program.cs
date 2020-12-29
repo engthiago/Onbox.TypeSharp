@@ -196,9 +196,9 @@ namespace Onbox.Csharp.Typescript
             classBodyBuilder.AppendLine($"export interface {GetDefinition(type)}" + " {");
             foreach (var prop in props)
             {
-                if (ShouldImport(prop.DeclaringType) && prop.PropertyType != type)
+                if (ShouldImport(prop.PropertyType) && prop.PropertyType != type)
                 {
-                    var importStatement = $"import {{ {GetImportName(prop.DeclaringType)} }} from \"./{GetImportName(prop.DeclaringType)}\"";
+                    var importStatement = $"import {{ {GetImportName(prop.PropertyType)} }} from \"./{GetImportName(prop.PropertyType)}\"";
                     
                     if (importStatments == string.Empty)
                     {
@@ -235,16 +235,16 @@ namespace Onbox.Csharp.Typescript
             File.WriteAllText(fullPath, content, Encoding.UTF8);
         }
 
-        private static bool ShouldImport(TypeDefinition type)
+        private static bool ShouldImport(TypeReference type)
         {
-            var isClass = type.IsClass;
-            if (isClass)
+            var valueType = type.IsValueType;
+            if (! valueType)
             {
                 return false;
             }
             else
             {
-                if (type.Interfaces.Any(i => i.InterfaceType.FullName == typeof(IList).FullName))
+                if (type.IsArray)
                 {
                     return false;
                 }
@@ -252,7 +252,7 @@ namespace Onbox.Csharp.Typescript
             }
         }
 
-        private static string GetImportName(TypeDefinition type)
+        private static string GetImportName(TypeReference type)
         {
             return $"{type.Name.Replace("`1", "")}";
         }
