@@ -11,6 +11,6 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Restore dependencies
-      run: dotnet restore "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet restore "actions/checkout/src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
     - name: Build
-      run: dotnet build "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet build "actions/checkout/src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
