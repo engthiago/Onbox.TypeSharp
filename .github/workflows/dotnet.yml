@@ -1,5 +1,6 @@
 name: .NET
-
+env: 
+  Project: "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
 on:
   push:
     branches: [ master ]
@@ -11,8 +12,6 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Restore dependencies
-      run: dotnet restore $Project
+      run: dotnet restore ${Project}
     - name: Build
-      run: dotnet build $Project
-    env:
-      Project: "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet build ${Project}
