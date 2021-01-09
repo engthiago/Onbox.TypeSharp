@@ -5,13 +5,13 @@ VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AF1896C9-ED82-46A7-9E23-A3D5E9CC3D32}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onbox.Csharp.Typescript", "src\Onbox.Csharp.Typescript\Onbox.Csharp.Typescript.csproj", "{E5D85FE9-A4E2-4800-8DAC-AB2F175B19A7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Onbox.TypeSharp", "src\Onbox.Csharp.Typescript\Onbox.TypeSharp.csproj", "{E5D85FE9-A4E2-4800-8DAC-AB2F175B19A7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5290F1C6-D13D-409C-B8B7-AA00C63B5CCA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleModels", "samples\SampleModels\SampleModels.csproj", "{052860FF-D5F1-4B0F-986D-0A10BDC541B5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleModels", "samples\SampleModels\SampleModels.csproj", "{052860FF-D5F1-4B0F-986D-0A10BDC541B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleAspCore", "src\SampleAspCore\SampleAspCore.csproj", "{A2CB5340-5E8E-4C33-9471-DCF2465EE63E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleAspCore", "src\SampleAspCore\SampleAspCore.csproj", "{A2CB5340-5E8E-4C33-9471-DCF2465EE63E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

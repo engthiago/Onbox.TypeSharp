@@ -9,8 +9,30 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Onbox.Csharp.Typescript
+namespace Onbox.TypeSharp
 {
+    public static class AssemblyLocator
+    {
+        public static void Init()
+        {
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+        }
+
+        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            Console.WriteLine("Trying to resolve: ");
+            Console.WriteLine(args.Name);
+
+            var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var loc = Path.Combine(folder, args.Name.Split(",").First() + ".dll");
+            Console.WriteLine("Path: ");
+            Console.WriteLine(loc);
+            var assembly = Assembly.LoadFrom(loc);
+            Console.WriteLine();
+            return assembly;
+        }
+    }
+
     class Program
     {
         public class Options
@@ -22,14 +44,17 @@ namespace Onbox.Csharp.Typescript
             public string Filter { get; set; }
 
             [Option('d', "destination", Required = true, HelpText = "The destination path.")]
-            public string DesitinationPath { get; set; }
+            public string DestinationPath { get; set; }
 
-            [Option('c', "controllers", Required = false, HelpText = "Map Aspnet Core Controllers.")]
-            public bool MapControllers { get; set; }
+            //[Option('c', "controllers", Required = false, HelpText = "Map Aspnet Core Controllers.")]
+            //public bool MapControllers { get; set; }
+
+            [Option('w', "watch", Required = false, HelpText = "")]
+            public bool Watch { get; set; }
         }
 
-        private static Dictionary<Type, string> imports = new Dictionary<Type, string>();
-        private static HashSet<Type> processedTypes = new HashSet<Type>();
+        private static readonly Dictionary<Type, string> imports = new Dictionary<Type, string>();
+        private static readonly HashSet<Type> processedTypes = new HashSet<Type>();
 
         private static string output;
 
@@ -41,24 +66,53 @@ namespace Onbox.Csharp.Typescript
 
         static void Main(string[] args)
         {
+            AssemblyLocator.Init();
+
             Parser.Default.ParseArguments<Options>(args)
-                   .WithParsed<Options>(o =>
+                   .WithParsed(options =>
                    {
-                       using (var watcher = new FileSystemWatcher())
+                       if (options.Watch)
                        {
-                           watcher.Path = o.Path;
-                           watcher.Filter = o.Filter;
-                           watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
-
-                           output = o.DesitinationPath;
-
-                           watcher.Created += OnModelsChanged;
-                           watcher.EnableRaisingEvents = true;
-
-                           Console.WriteLine("Press 'q' to quit.");
-                           while (Console.Read() != 'q') ;
+                           WatchAssemblies(options);
+                       }
+                       else
+                       {
+                           try
+                           {
+                               Console.WriteLine($"Path {options.Path}");
+                               output = options.DestinationPath;
+                               var filtererAssemblies = Directory.GetFiles(options.Path, options.Filter);
+                               foreach (var assemblyPath in filtererAssemblies)
+                               {
+                                   WriteTypes(assemblyPath);
+                               }
+                           }
+                           catch (Exception ex)
+                           {
+                               Console.WriteLine($"Exception: {ex.Message}");
+                               Console.WriteLine($"Trace: {ex.StackTrace}");
+                           }
+                           ClearCache();
                        }
                    });
+        }
+
+        private static void WatchAssemblies(Options options)
+        {
+            using (var watcher = new FileSystemWatcher())
+            {
+                watcher.Path = options.Path;
+                watcher.Filter = options.Filter;
+                watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
+
+                output = options.DestinationPath;
+
+                watcher.Created += OnModelsChanged;
+                watcher.EnableRaisingEvents = true;
+
+                Console.WriteLine("Press 'q' to quit.");
+                while (Console.Read() != 'q') ;
+            }
         }
 
         private static void OnModelsChanged(object sender, FileSystemEventArgs e)
@@ -85,7 +139,7 @@ namespace Onbox.Csharp.Typescript
             ModuleDefinition module = ModuleDefinition.ReadModule(fileName);
             foreach (TypeDefinition type in module.Types)
             {
-                if (! type.IsPublic)
+                if (!type.IsPublic)
                     continue;
 
                 Console.WriteLine(type.FullName);
@@ -110,29 +164,19 @@ namespace Onbox.Csharp.Typescript
         {
             using (FileStream stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
             {
-                //var byteArr = GetBytes(stream);
-                //var assembly = Assembly.Load(byteArr);
+                var byteArr = GetBytes(stream);
+                var assembly = Assembly.Load(byteArr);
 
-                var assembly = Assembly.LoadFrom(fullPath);
-                var types = assembly.GetTypes();
+                var types = assembly.GetExportedTypes();
 
-                var controllers = types
-                    .Where(t => t.Name.Contains("Controller"));
-
-                foreach (var controller in controllers)
-                {
-                    if (! processedTypes.Contains(controller))
-                    {
-                        ProcessController(controller, output);
-                    }
-                }
+                Console.WriteLine(types.Select(t => t.Name).Aggregate((a, b) => a + ", " + b));
 
                 var models = types
                     .Where(t => t.GetConstructors().Where(c => c.IsPublic && c.GetParameters().Length == 0).Any() || t.IsEnum);
 
                 foreach (var type in models)
                 {
-                    if (! processedTypes.Contains(type))
+                    if (!processedTypes.Contains(type))
                     {
                         ProcessType(type, output);
                     }
@@ -218,12 +262,12 @@ namespace Onbox.Csharp.Typescript
                 if (ShouldImport(prop.PropertyType) && prop.PropertyType != type)
                 {
                     var importStatement = $"import {{ {GetImportName(prop.PropertyType)} }} from \"./{GetImportName(prop.PropertyType)}\"";
-                    
+
                     if (importStatments == string.Empty)
                     {
                         importStatments += importStatement;
                     }
-                    else if (! importStatments.Contains(importStatement))
+                    else if (!importStatments.Contains(importStatement))
                     {
                         importStatments += Environment.NewLine + importStatement;
                     }
