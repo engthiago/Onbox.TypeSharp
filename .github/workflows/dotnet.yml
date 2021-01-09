@@ -10,7 +10,8 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - uses: actions/checkout@v2
     - name: Restore dependencies
-      run: dotnet restore "actions/checkout/src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet restore "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
     - name: Build
-      run: dotnet build "actions/checkout/src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet build "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
