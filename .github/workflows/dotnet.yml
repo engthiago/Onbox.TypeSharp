@@ -9,10 +9,10 @@ on:
 jobs:
   build:
     runs-on: windows-latest
-    env: 
-      PROJECT: "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
     steps:
     - name: Restore dependencies
-      run: dotnet restore $PROJECT
+      run: dotnet restore $Project
     - name: Build
-      run: dotnet build $PROJECT
+      run: dotnet build $Project
+    env:
+      Project: "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
