@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using Mono.Cecil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -133,18 +132,6 @@ namespace Onbox.TypeSharp
                 }
                 ClearCache();
             });
-        }
-
-        private static void PrintTypes(string fileName)
-        {
-            ModuleDefinition module = ModuleDefinition.ReadModule(fileName);
-            foreach (TypeDefinition type in module.Types)
-            {
-                if (!type.IsPublic)
-                    continue;
-
-                Console.WriteLine(type.FullName);
-            }
         }
 
         public static byte[] GetBytes(Stream input)

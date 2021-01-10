@@ -5,11 +5,28 @@
     <TargetFramework>net5.0</TargetFramework>
     <PublishReadyToRun>true</PublishReadyToRun>
     <AssemblyName>TypeSharp</AssemblyName>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <PackageId>Onbox.TypeSharp</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Thiago Almeida</Authors>
+    <Company>Onbox</Company>
+    <Description>Command line app to convert CSharp data models into Typescript</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/engthiago/Onbox.TypeSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReleaseNotes>Typescript, C#, CSharp, DataModel</PackageReleaseNotes>
+    <PackageIcon>onbox.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="onbox.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
