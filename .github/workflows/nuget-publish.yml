@@ -17,7 +17,7 @@ jobs:
     - name: Build
       run: dotnet build "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj" -c Release
     - name: Nuget pack
-      run: nuget pack "src\Onbox.TypeSharp\Onbox.TypeSharp.nuspec" -OutputDirectory "${{ GITHUB_WORKSPACE }}\src\Onbox.TypeSharp"
+      run: nuget pack "src\Onbox.TypeSharp\Onbox.TypeSharp.nuspec" -OutputDirectory "${{env.GITHUB_WORKSPACE}}\src\Onbox.TypeSharp"
     - name: Nuget publish
-      run: nuget push "${{ GITHUB_WORKSPACE }}\src\Onbox.TypeSharp\*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
+      run: nuget push "${{env.GITHUB_WORKSPACE}}\src\Onbox.TypeSharp\*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
     
