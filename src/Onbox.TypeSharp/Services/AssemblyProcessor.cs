@@ -43,8 +43,8 @@ namespace Onbox.TypeSharp.Services
                     return;
                 }
 
-                //Console.WriteLine($"*** TypeSharp Converting Assembly ***");
-                //Console.WriteLine(fullAssemblyPath);
+                Console.WriteLine($"*** Converting Assembly ***");
+                Console.WriteLine(fullAssemblyPath);
 
                 var assembly = assemblyLoader.LoadAssembly(fullAssemblyPath);
                 var outputFolder = options.DestinationPath;
@@ -76,7 +76,7 @@ namespace Onbox.TypeSharp.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine($"*** Exception: {ex.Message} ****");
                 Console.WriteLine($"Trace: {ex.StackTrace}");
             }
             finally

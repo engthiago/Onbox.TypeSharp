@@ -12,6 +12,7 @@ namespace Onbox.TypeSharp
         {
             try
             {
+                Console.WriteLine("*** Initializing TypeSharp ***");
                 var container = new Container();
                 Parser.Default.ParseArguments<Options>(args)
                                 .WithParsed(options =>
@@ -37,7 +38,7 @@ namespace Onbox.TypeSharp
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception: {ex.Message}");
+                Console.WriteLine($"*** Exception: {ex.Message} ***");
                 Console.WriteLine($"Trace: {ex.StackTrace}");
             }
 
