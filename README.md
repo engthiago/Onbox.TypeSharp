@@ -41,9 +41,9 @@ TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\
 ```
 
 ## Example 3
-Converts only types that contains OnboxServices on their fully qualified names from one assembly and dumps them into a models folder on the desktop:
+Converts only types that contains Onbox.Web.Models on their fully qualified names from one assembly and dumps them into a models folder on the desktop:
 ```
-TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --filter "*.dll" --type-filter "OnboxServices" --destination "C:\Users\MyUser\Desktop\Models"
+TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --filter "*.dll" --type-filter "Onbox.Web.Models" --destination "C:\Users\MyUser\Desktop\Models"
 ```
 
 ## Example 4
