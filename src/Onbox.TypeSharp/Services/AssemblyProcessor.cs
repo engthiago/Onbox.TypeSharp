@@ -43,12 +43,14 @@ namespace Onbox.TypeSharp.Services
                     return;
                 }
 
-                Console.WriteLine($"*** TypeSharp Converting Assembly ***");
-                Console.WriteLine(fullAssemblyPath);
+                //Console.WriteLine($"*** TypeSharp Converting Assembly ***");
+                //Console.WriteLine(fullAssemblyPath);
 
                 var assembly = assemblyLoader.LoadAssembly(fullAssemblyPath);
                 var outputFolder = options.DestinationPath;
                 var typeFilter = options.TypeFilter?.ToLower().Replace("*", "");
+
+                //Console.WriteLine($"Type Filter: {typeFilter}");
 
                 var types = assemblyTypeExtractor.GetModelTypes(assembly);
                 foreach (var type in types)
@@ -60,8 +62,9 @@ namespace Onbox.TypeSharp.Services
                     }
 
                     // If this type passes the type filter
-                    if (!string.IsNullOrEmpty(typeFilter) && !type.FullName.Contains(typeFilter))
+                    if (!string.IsNullOrEmpty(typeFilter) && !type.FullName.ToLower().Contains(typeFilter))
                     {
+                        Console.WriteLine($"Ignoring type: {type.FullName}");
                         continue;
                     }
 
