@@ -11,48 +11,9 @@ using System.Threading.Tasks;
 
 namespace Onbox.TypeSharp
 {
-    public static class AssemblyLocator
+
+    partial class Program
     {
-        public static void Init()
-        {
-            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
-        }
-
-        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-        {
-            Console.WriteLine("Trying to resolve: ");
-            Console.WriteLine(args.Name);
-
-            var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var loc = Path.Combine(folder, args.Name.Split(",").First() + ".dll");
-            Console.WriteLine("Path: ");
-            Console.WriteLine(loc);
-            var assembly = Assembly.LoadFrom(loc);
-            Console.WriteLine();
-            return assembly;
-        }
-    }
-
-    class Program
-    {
-        public class Options
-        {
-            [Option('s', "source", Required = true, HelpText = "The path of the folder to be watched.")]
-            public string Path { get; set; }
-
-            [Option('f', "filter", Required = true, HelpText = "The names of the assemblies to be watched.")]
-            public string Filter { get; set; }
-
-            [Option('d', "destination", Required = true, HelpText = "The destination path.")]
-            public string DestinationPath { get; set; }
-
-            //[Option('c', "controllers", Required = false, HelpText = "Map Aspnet Core Controllers.")]
-            //public bool MapControllers { get; set; }
-
-            [Option('w', "watch", Required = false, HelpText = "")]
-            public bool Watch { get; set; }
-        }
-
         private static readonly Dictionary<Type, string> imports = new Dictionary<Type, string>();
         private static readonly HashSet<Type> processedTypes = new HashSet<Type>();
 
@@ -66,8 +27,6 @@ namespace Onbox.TypeSharp
 
         static void Main(string[] args)
         {
-            AssemblyLocator.Init();
-
             Parser.Default.ParseArguments<Options>(args)
                    .WithParsed(options =>
                    {
@@ -156,8 +115,6 @@ namespace Onbox.TypeSharp
                 var assembly = Assembly.Load(byteArr);
 
                 var types = assembly.GetExportedTypes();
-
-                Console.WriteLine(types.Select(t => t.Name).Aggregate((a, b) => a + ", " + b));
 
                 var models = types
                     .Where(t => t.GetConstructors().Where(c => c.IsPublic && c.GetParameters().Length == 0).Any() || t.IsEnum);
