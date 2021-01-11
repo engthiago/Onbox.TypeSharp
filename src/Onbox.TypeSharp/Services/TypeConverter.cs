@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,18 +12,24 @@ namespace Onbox.TypeSharp.Services
         private readonly PropertyUtils propertyUtils;
         private readonly StringCasingService stringCasingService;
         private readonly TypeCache typeCache;
+        private readonly FileWritterService fileWritterService;
+        private readonly Options options;
 
         public TypeConverter(
             TypeNamingService typeNamingService,
             PropertyUtils propertyUtils,
             StringCasingService stringCasingService,
-            TypeCache typeCache
+            TypeCache typeCache,
+            FileWritterService fileWritterService,
+            Options options
             )
         {
             this.typeNamingService = typeNamingService;
             this.propertyUtils = propertyUtils;
             this.stringCasingService = stringCasingService;
             this.typeCache = typeCache;
+            this.fileWritterService = fileWritterService;
+            this.options = options;
         }
 
         public string Convert(Type type)
@@ -82,7 +89,10 @@ namespace Onbox.TypeSharp.Services
 
                     if (!this.typeCache.Contains(prop.PropertyType))
                     {
-                        this.Convert(prop.PropertyType);
+                        var convertedProp = this.Convert(prop.PropertyType);
+                        var typeName = this.typeNamingService.GetImportName(prop.PropertyType);
+                        var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
+                        this.fileWritterService.Write(convertedProp, filePath);
                     }
                 }
                 classBodyBuilder.AppendLine($"   {this.stringCasingService.ConvertToCamelCase(prop.Name)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");

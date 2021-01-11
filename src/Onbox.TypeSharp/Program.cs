@@ -27,7 +27,7 @@ namespace Onbox.TypeSharp
                                     else
                                     {
                                         var assemblyProcessor = container.Resolve<AssemblyProcessor>();
-                                        var files = Directory.GetFiles(options.SourcePath, options.Filter);
+                                        var files = Directory.GetFiles(options.SourcePath, options.FileFilter);
                                         foreach (var file in files)
                                         {
                                             assemblyProcessor.Process(file);

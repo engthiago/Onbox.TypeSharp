@@ -5,19 +5,19 @@ namespace Onbox.TypeSharp
 
     public class Options
     {
-        [Option('s', "source", Required = true, HelpText = "The path of the folder to be watched.")]
+        [Option('s', "source", Required = true, HelpText = "The path of the folder to be converted.")]
         public string SourcePath { get; set; }
 
-        [Option('f', "filter", Required = true, HelpText = "The names of the assemblies to be watched.")]
-        public string Filter { get; set; }
+        [Option('f', "file-filter", Required = true, HelpText = "Filters the assemblies (just pure names) to be converted.")]
+        public string FileFilter { get; set; }
 
-        [Option('d', "destination", Required = true, HelpText = "The destination path.")]
+        [Option('t', "type-filter", Required = false, HelpText = "Filters the types (fully qualified names) to be converted.")]
+        public string TypeFilter { get; set; }
+
+        [Option('d', "destination", Required = true, HelpText = "The path of the folder where the Typescript files will be saved.")]
         public string DestinationPath { get; set; }
 
-        //[Option('c', "controllers", Required = false, HelpText = "Map Aspnet Core Controllers.")]
-        //public bool MapControllers { get; set; }
-
-        [Option('w', "watch", Required = false, HelpText = "")]
+        [Option('w', "watch", Required = false, HelpText = "The app will be watching the folder and re-run everytime something changes.")]
         public bool Watch { get; set; }
     }
 

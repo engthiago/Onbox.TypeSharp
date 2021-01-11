@@ -23,7 +23,7 @@ namespace Onbox.TypeSharp.Services
             using (var watcher = new FileSystemWatcher())
             {
                 watcher.Path = options.SourcePath;
-                watcher.Filter = options.Filter;
+                watcher.Filter = options.FileFilter;
                 watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
                 watcher.Created += OnModelsChanged;

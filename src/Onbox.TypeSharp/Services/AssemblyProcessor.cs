@@ -11,6 +11,7 @@ namespace Onbox.TypeSharp.Services
         private FileWritterService fileWritterService;
         private readonly TypeCache typeCache;
         private Options options;
+        private readonly TypeNamingService typeNamingService;
 
         public AssemblyProcessor(
             AssemblyLoader assemblyLoader,
@@ -18,7 +19,8 @@ namespace Onbox.TypeSharp.Services
             TypeConverter typeConverter,
             FileWritterService fileWritterService,
             TypeCache typeCache,
-            Options options
+            Options options,
+            TypeNamingService typeNamingService
             )
         {
             this.assemblyLoader = assemblyLoader;
@@ -27,6 +29,7 @@ namespace Onbox.TypeSharp.Services
             this.fileWritterService = fileWritterService;
             this.typeCache = typeCache;
             this.options = options;
+            this.typeNamingService = typeNamingService;
         }
 
         public void Process(string fullAssemblyPath)
@@ -34,20 +37,37 @@ namespace Onbox.TypeSharp.Services
             try
             {
                 // Ignore assemblies or other files that doesnt pass the filter
-                if (!fullAssemblyPath.Contains(options.Filter))
+                var fileFilter = options.FileFilter.Replace("*", "");
+                if (!fullAssemblyPath.Contains(fileFilter))
                 {
                     return;
                 }
 
-                Console.WriteLine($"Assembly: {fullAssemblyPath}");
+                Console.WriteLine($"*** TypeSharp Converting Assembly ***");
+                Console.WriteLine(fullAssemblyPath);
 
                 var assembly = assemblyLoader.LoadAssembly(fullAssemblyPath);
                 var outputFolder = options.DestinationPath;
+                var typeFilter = options.TypeFilter?.ToLower().Replace("*", "");
+
                 var types = assemblyTypeExtractor.GetModelTypes(assembly);
                 foreach (var type in types)
                 {
+                    //If this type was already converted
+                    if (this.typeCache.Contains(type))
+                    {
+                        continue;
+                    }
+
+                    // If this type passes the type filter
+                    if (!string.IsNullOrEmpty(typeFilter) && !type.FullName.Contains(typeFilter))
+                    {
+                        continue;
+                    }
+
                     var result = this.typeConverter.Convert(type);
-                    var filePath = Path.Combine(outputFolder, type.Name + ".ts");
+                    var typeName = this.typeNamingService.GetImportName(type);
+                    var filePath = Path.Combine(outputFolder, typeName + ".ts");
                     this.fileWritterService.Write(result, filePath);
                 }
             }
