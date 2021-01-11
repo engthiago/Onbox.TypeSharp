@@ -5,7 +5,7 @@ Commandline app to convert CSharp data models into Typescript:
 ## Instalation via Nuget
 1. Install via Visual Studio Package Manager or Open commandline (inside a dotnet project folder) and type:
 ```Install-Package Onbox.TypeSharp```
-2. cd into the "packages\onbox.typesharp\0.1.0\Content\net5.0" folder
+2. cd into the "packages\Onbox.TypeSharp\{version}\Content" folder
 3. Execute commands against .\TypeSharp.exe as shown on examples below
 
 ## Commmandline options
