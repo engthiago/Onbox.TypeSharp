@@ -29,6 +29,8 @@ jobs:
         draft: false
         prerelease: false
       id: create_release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1
       with:
@@ -36,7 +38,9 @@ jobs:
         asset_path: ./release.zip
         asset_name: release.zip
         asset_content_type: application/zip
-      id: upload-release-asset 
+      id: upload-release-asset
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Nuget pack
       run: nuget pack "src\Onbox.TypeSharp\Onbox.TypeSharp.nuspec" -OutputDirectory "${{env.GITHUB_WORKSPACE}}\src\Onbox.TypeSharp"
     - name: Nuget publish
