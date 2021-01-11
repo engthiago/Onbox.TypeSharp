@@ -9,6 +9,12 @@ Commandline app to convert CSharp data models into Typescript:
 3. Execute commands against .\TypeSharp.exe as shown on example sections below
 ![Example Image](src/Onbox.TypeSharp/location.png)
 
+## Instalation via Release download
+1. Go to https://github.com/engthiago/Onbox.TypeSharp/releases and downlaod the latest version
+2. Unzip the contents
+3. cd into the folder 
+4. Execute commands against .\TypeSharp.exe as shown on example sections below
+
 ## Commmandline options
 ``` -s or --source ``` **Required** <br/>
 The full path name of the folder to be converted and/or to be watched. Sub diretories will also be considered. This path is not case sensitive.
