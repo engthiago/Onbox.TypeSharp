@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -68,7 +69,17 @@ namespace Onbox.TypeSharp.Services
         {
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            PropertyInfo[] props = null;
+            if (type.GetInterfaces().Any(i => i == typeof(IList)))
+            {
+                var arg = type.GetGenericArguments().FirstOrDefault();
+                props = arg.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            }
+            else
+            {
+                props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            }
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.AppendLine($"export interface {this.typeNamingService.GetDefinitionName(type)}" + " {");

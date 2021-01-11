@@ -8,11 +8,23 @@ namespace Onbox.TypeSharp.Services
     {
         public string GetImportName(Type type)
         {
+            if (type.GetInterfaces().Any(i => i == typeof(IList)))
+            {
+                var att = type.GetGenericArguments().FirstOrDefault();
+                return this.GetImportName(att);
+            }
+
             return $"{type.Name.Replace("`1", "")}";
         }
 
         public string GetDefinitionName(Type type)
         {
+            if (type.GetInterfaces().Any(i => i == typeof(IList)))
+            {
+                var att = type.GetGenericArguments().FirstOrDefault();
+                return this.GetDefinitionName(att);
+            }
+
             return $"{type.Name.Replace("`1", "<T>")}";
         }
 
@@ -36,12 +48,18 @@ namespace Onbox.TypeSharp.Services
             }
             else if (type.GetInterfaces().Any(type => type == typeof(IList)))
             {
-                var att = type.GetGenericArguments().LastOrDefault();
+                var att = type.GetGenericArguments().FirstOrDefault();
                 return $"{att.Name}[]";
             }
             else if (type.IsGenericType)
             {
-                var att = type.GetGenericArguments().LastOrDefault();
+                var args = type.GetGenericArguments();
+                if (args.Count() > 1)
+                {
+                    throw new Exception($"Property types with more than one generic arguments are not supported: {type.Name}");
+                }
+
+                var att = type.GetGenericArguments().FirstOrDefault();
                 return $"{type.Name.Replace("`1", "")}<{att.Name}>";
             }
             else if (type.IsClass)

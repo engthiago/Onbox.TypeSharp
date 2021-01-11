@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections;
-using System.Linq;
 
 namespace Onbox.TypeSharp.Services
 {
@@ -15,10 +13,6 @@ namespace Onbox.TypeSharp.Services
             }
             else
             {
-                if (type.GetInterfaces().Any(type => type == typeof(IList)))
-                {
-                    return false;
-                }
                 return true;
             }
         }

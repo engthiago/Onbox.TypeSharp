@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Onbox.Core.V8.ReactFactory;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -7,15 +8,13 @@ namespace Onbox.TypeSharp.Services
     public class AssemblyFileWatcher
     {
         private readonly AssemblyProcessor assemblyProcessor;
-        private readonly Options options;
+        private readonly Debouncer debouncer = ReactFactory.Debouncer();
 
         public AssemblyFileWatcher(
-            AssemblyProcessor assemblyProcessor,
-            Options options
+            AssemblyProcessor assemblyProcessor
             )
         {
             this.assemblyProcessor = assemblyProcessor;
-            this.options = options;
         }
 
         public void Watch(Options options)
@@ -24,12 +23,13 @@ namespace Onbox.TypeSharp.Services
             {
                 watcher.Path = options.SourcePath;
                 watcher.Filter = options.FileFilter;
+                watcher.IncludeSubdirectories = true;
                 watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
                 watcher.Created += OnModelsChanged;
                 watcher.EnableRaisingEvents = true;
-
-                Console.WriteLine("Press 'q' to quit the app.");
+                this.EchoListening();
+                
                 while (Console.Read() != 'q') ;
             }
         }
@@ -41,7 +41,14 @@ namespace Onbox.TypeSharp.Services
                 // Give time to the compiled file to be usable
                 Task.Delay(300);
                 this.assemblyProcessor.Process(e.FullPath);
+                debouncer.Debounce(EchoListening, 2000);
             });
+        }
+
+        private void EchoListening()
+        {
+            Console.WriteLine("Listening for folder changes...");
+            Console.WriteLine("Enter 'q' to quit the app.");
         }
     }
 }

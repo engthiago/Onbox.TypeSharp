@@ -73,6 +73,7 @@ namespace Onbox.TypeSharp.Services
                     var filePath = Path.Combine(outputFolder, typeName + ".ts");
                     this.fileWritterService.Write(result, filePath);
                 }
+                Console.WriteLine("Done...");
             }
             catch (Exception ex)
             {
