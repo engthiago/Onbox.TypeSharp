@@ -17,20 +17,20 @@ jobs:
     - name: Build and Publish
       run: dotnet publish "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj" -c Release
     - name: Zip Release
-    - uses: papeloto/action-zip@v1
+      uses: papeloto/action-zip@v1
       with:
         files: src\Onbox.TypeSharp\bin\Release\net5.0\win-x86\publish
         dest: release.zip
     - name: Create Release
-    - uses: actions/create-release@v1
+      uses: actions/create-release@v1
       with:
         tag_name: ${{ env.GITHUB_REF }}
         release_name: Release ${{ env.GITHUB_REF }}
         draft: false
         prerelease: false
-        id: create_release
+      id: create_release
     - name: Upload Release Asset
-    - uses: actions/upload-release-asset@v1
+      uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
         asset_path: ./release.zip
