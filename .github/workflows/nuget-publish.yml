@@ -13,11 +13,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Restore dependencies
-      run: dotnet restore "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+      run: dotnet restore "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj"
     - name: Build
-      run: dotnet build "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj" -c Release
+      run: dotnet build "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj" -c Release
     - name: Nuget pack
-      run: nuget pack "src/Onbox.TypeSharp/Onbox.TypeSharp.nuspec" -OutputDirectory "src/Onbox.TypeSharp"
+      run: nuget pack "src\Onbox.TypeSharp\Onbox.TypeSharp.nuspec" -OutputDirectory "${{ GITHUB_WORKSPACE }}\src\Onbox.TypeSharp"
     - name: Nuget publish
-      run: nuget push "src/Onbox.TypeSharp/*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
+      run: nuget push "${{ GITHUB_WORKSPACE }}\src\Onbox.TypeSharp\*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
     
