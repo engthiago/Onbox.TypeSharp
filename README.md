@@ -20,7 +20,7 @@ The full path name of the folder to be converted and/or to be watched.
 Filters the assemblies (just pure assembly names not full name) to be converted.
 
 ``` -t or --type-filter ``` **Optional** <br/>
-Filters the types (fully qualified names) to be converted.
+Filters the types (fully qualified names) to be converted. Notice that if another model depends on ignored ones, they will still be converted.
 
 ``` -d or --destination ``` **Required** <br/>
 The full path name of the folder where the Typescript files will be saved.
