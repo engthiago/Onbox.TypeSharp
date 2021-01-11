@@ -28,7 +28,7 @@ jobs:
         release_name: Release ${{ env.GITHUB_REF }}
         draft: false
         prerelease: false
-        id: create_release:  
+        id: create_release
     - name: Upload Release Asset
     - uses: actions/upload-release-asset@v1
       with:
