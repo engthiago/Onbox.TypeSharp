@@ -9,6 +9,8 @@ Commandline app to convert CSharp data models into Typescript
 * Lightweight
 * Can watch assemblies for changes
 
+## Disadvantages
+* Can not load runtime dependencies like Microsoft.AspNetCore.Mvc, so it can not run against ASP.NetCore assemblies
 
 ## Example 1
 To convert all the types from one assembly and dump them into a models folder on the desktop:
