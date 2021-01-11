@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Build Nuget Package
+name: Publish Nuget Package
 
 # Controls when the action will run. 
 on:
@@ -17,10 +17,7 @@ jobs:
     - name: Build
       run: dotnet build "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj" -c Release
     - name: Nuget pack
-      run: nuget pack "src/Onbox.TypeSharp/Onbox.TypeSharp.nuspec"
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name: nuget
-        path: "src/Onbox.TypeSharp/*.nupkg"
+      run: nuget pack "src/Onbox.TypeSharp/Onbox.TypeSharp.nuspec" -OutputDirectory "src/Onbox.TypeSharp"
+    - name: Nuget publish
+      run: nuget push "src/Onbox.TypeSharp/*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
     
