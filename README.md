@@ -1,4 +1,4 @@
-# Onbox.TypeSharp ![.NET](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master)
+# Onbox.TypeSharp ![.NET](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master) ![Publish Release / Package](https://github.com/engthiago/Onbox.TypeSharp/workflows/Publish%20Release%20/%20Package/badge.svg?branch=master)
 Commandline app to convert CSharp data models into Typescript:
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
