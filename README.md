@@ -1,4 +1,4 @@
-# Onbox.TypeSharp ![Build](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master)
+# Onbox.TypeSharp ![Build Status](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master)
 Commandline app to convert CSharp data models into Typescript:
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
@@ -52,3 +52,7 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 ```
 TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
 ```
+
+## Dependencies
+* [Onbox.Di](https://www.nuget.org/packages/Onbox.Di)
+* [CommandLineParser](https://www.nuget.org/packages/CommandLineParser)
