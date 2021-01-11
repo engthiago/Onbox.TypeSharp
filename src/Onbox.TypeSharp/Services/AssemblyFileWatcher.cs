@@ -1,20 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using static Onbox.TypeSharp.Program;
 
 namespace Onbox.TypeSharp.Services
 {
     public class AssemblyFileWatcher
     {
+        private readonly AssemblyProcessor assemblyProcessor;
+        private readonly Options options;
+
+        public AssemblyFileWatcher(
+            AssemblyProcessor assemblyProcessor,
+            Options options
+            )
+        {
+            this.assemblyProcessor = assemblyProcessor;
+            this.options = options;
+        }
+
         public void Watch(Options options)
         {
             using (var watcher = new FileSystemWatcher())
             {
-                watcher.Path = options.Path;
+                watcher.Path = options.SourcePath;
                 watcher.Filter = options.Filter;
                 watcher.NotifyFilter = NotifyFilters.LastAccess | NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.DirectoryName;
 
@@ -28,19 +36,11 @@ namespace Onbox.TypeSharp.Services
 
         private void OnModelsChanged(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"File: {e.FullPath} {e.ChangeType}");
             Task.Factory.StartNew(() =>
             {
+                // Give time to the compiled file to be usable
                 Task.Delay(300);
-                try
-                {
-
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Exception: {ex.Message}");
-                    Console.WriteLine($"Trace: {ex.StackTrace}");
-                }
+                this.assemblyProcessor.Process(e.FullPath);
             });
         }
     }

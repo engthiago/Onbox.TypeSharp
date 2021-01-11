@@ -16,5 +16,10 @@ namespace Onbox.TypeSharp.Services
         {
             return processedTypes.Add(type);
         }
+
+        public void ClearCache()
+        {
+            processedTypes.Clear();
+        }
     }
 }

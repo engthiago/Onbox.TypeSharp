@@ -6,7 +6,7 @@ namespace Onbox.TypeSharp
     public class Options
     {
         [Option('s', "source", Required = true, HelpText = "The path of the folder to be watched.")]
-        public string Path { get; set; }
+        public string SourcePath { get; set; }
 
         [Option('f', "filter", Required = true, HelpText = "The names of the assemblies to be watched.")]
         public string Filter { get; set; }

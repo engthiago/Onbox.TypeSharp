@@ -5,26 +5,59 @@ using System.Text;
 
 namespace Onbox.TypeSharp.Services
 {
-    public class ModelConverter
+    public class TypeConverter
     {
         private readonly TypeNamingService typeNamingService;
-        private readonly TypeCache typeCache;
         private readonly PropertyUtils propertyUtils;
         private readonly StringCasingService stringCasingService;
+        private readonly TypeCache typeCache;
 
-        public ModelConverter(
+        public TypeConverter(
             TypeNamingService typeNamingService,
-            TypeCache typeCache,
             PropertyUtils propertyUtils,
-            StringCasingService stringCasingService)
+            StringCasingService stringCasingService,
+            TypeCache typeCache
+            )
         {
             this.typeNamingService = typeNamingService;
-            this.typeCache = typeCache;
             this.propertyUtils = propertyUtils;
             this.stringCasingService = stringCasingService;
+            this.typeCache = typeCache;
         }
 
         public string Convert(Type type)
+        {
+            if (type.IsEnum)
+            {
+                return this.ConvertEnum(type);
+            }
+            else
+            {
+                return this.ConvertModel(type);
+            }
+        }
+
+        public string ConvertEnum(Type type)
+        {
+            var enumBodyBuilder = new StringBuilder();
+
+            var values = type.GetEnumValues();
+
+            enumBodyBuilder.AppendLine();
+            enumBodyBuilder.AppendLine($"export enum {this.typeNamingService.GetDefinitionName(type)}" + " {");
+            var i = 0;
+            foreach (var value in values)
+            {
+                enumBodyBuilder.AppendLine($"   {value} = {value.GetHashCode()},");
+                i++;
+            }
+            enumBodyBuilder.AppendLine("}");
+
+            var result = enumBodyBuilder.ToString();
+            return result;
+        }
+
+        public string ConvertModel(Type type)
         {
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
@@ -47,9 +80,9 @@ namespace Onbox.TypeSharp.Services
                         importStatments += Environment.NewLine + importStatement;
                     }
 
-                    if (!typeCache.Contains(prop.PropertyType))
+                    if (!this.typeCache.Contains(prop.PropertyType))
                     {
-                        Convert(prop.PropertyType);
+                        this.Convert(prop.PropertyType);
                     }
                 }
                 classBodyBuilder.AppendLine($"   {this.stringCasingService.ConvertToCamelCase(prop.Name)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
@@ -58,8 +91,7 @@ namespace Onbox.TypeSharp.Services
 
             var result = importStatments.Any() ? importStatments + Environment.NewLine + classBodyBuilder.ToString() : classBodyBuilder.ToString();
 
-            typeCache.Add(type);
-
+            this.typeCache.Add(type);
             return result;
         }
     }
