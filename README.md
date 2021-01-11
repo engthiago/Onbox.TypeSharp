@@ -1,5 +1,5 @@
 # Onbox.TypeSharp
-Commandline app to convert CSharp data models into Typescript
+Commandline app to convert CSharp data models into Typescript.
 
 ## Advantages
 * Do not depend o Visual Studio
