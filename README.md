@@ -59,6 +59,9 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 ## Disadvantages
 * Can not load runtime dependencies like Microsoft.AspNetCore.Mvc, so it can not run against ASP.NetCore assemblies
 
-## Dependencies
+## Dev-Dependencies
 * [Onbox.Di](https://www.nuget.org/packages/Onbox.Di)
 * [CommandLineParser](https://www.nuget.org/packages/CommandLineParser)
+
+## Runtime Dependencies
+All runtime dependencies are already packaged when installed
