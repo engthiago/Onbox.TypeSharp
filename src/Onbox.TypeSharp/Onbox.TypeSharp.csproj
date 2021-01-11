@@ -1,13 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <PublishReadyToRun>true</PublishReadyToRun>
     <AssemblyName>TypeSharp</AssemblyName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Onbox.TypeSharp</PackageId>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <Authors>Thiago Almeida</Authors>
     <Company>Onbox</Company>
     <Description>Command line app to convert CSharp data models into Typescript</Description>
@@ -16,6 +15,15 @@
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes>Typescript, C#, CSharp, DataModel</PackageReleaseNotes>
     <PackageIcon>onbox.png</PackageIcon>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x86</RuntimeIdentifier>
+    <PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
   </PropertyGroup>
 
   <ItemGroup>
