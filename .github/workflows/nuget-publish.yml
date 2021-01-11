@@ -1,0 +1,23 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Publish Nuget Package
+
+# Controls when the action will run. 
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  pack-nuget:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Restore dependencies
+      run: dotnet restore "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj"
+    - name: Build
+      run: dotnet build "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj" -c Release
+    - name: Nuget pack
+      run: nuget pack "src\Onbox.TypeSharp\Onbox.TypeSharp.nuspec" -OutputDirectory "${{env.GITHUB_WORKSPACE}}\src\Onbox.TypeSharp"
+    - name: Nuget publish
+      run: nuget push "${{env.GITHUB_WORKSPACE}}\src\Onbox.TypeSharp\*.nupkg" -Source https://api.nuget.org/v3/index.json -SkipDuplicate -ApiKey ${{ secrets.NUGET_KEY }}
+    
