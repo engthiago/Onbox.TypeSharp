@@ -1,5 +1,6 @@
 # Onbox.TypeSharp
-Commandline app to convert CSharp data models into Typescript.
+Commandline app to convert CSharp data models into Typescript:
+![Example Image](src/Onbox.TypeSharp/Example.png)
 
 ## Advantages
 * Do not depend o Visual Studio
