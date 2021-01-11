@@ -19,5 +19,5 @@ jobs:
     - name: Nuget pack
       run: nuget pack "src/Onbox.TypeSharp/Onbox.TypeSharp.nuspec"
     - name: Nuget publish
-      run: nuget push "src/Onbox.TypeSharp/Onbox.TypeSharp/*.nupkg" -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGET_KEY }}
+      run: nuget push src/Onbox.TypeSharp/*.nupkg -Source https://api.nuget.org/v3/index.json -ApiKey ${{ secrets.NUGET_KEY }}
     
