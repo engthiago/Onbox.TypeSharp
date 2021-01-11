@@ -34,10 +34,6 @@ namespace Onbox.TypeSharp.Services
             {
                 return "Date";
             }
-            else if (type.IsClass)
-            {
-                return type.Name;
-            }
             else if (type.GetInterfaces().Any(type => type == typeof(IList)))
             {
                 var att = type.GetGenericArguments().LastOrDefault();
@@ -48,7 +44,11 @@ namespace Onbox.TypeSharp.Services
                 var att = type.GetGenericArguments().LastOrDefault();
                 return $"{type.Name.Replace("`1", "")}<{att.Name}>";
             }
-            
+            else if (type.IsClass)
+            {
+                return type.Name;
+            }
+
             throw new Exception($"Unsupported Property Type: {type.Name}");
         }
 
