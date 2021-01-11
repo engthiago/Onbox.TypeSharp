@@ -59,7 +59,7 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 * Do not depend o Visual Studio
 * Dotnet 5 based, so it runs wherever dotnet runs
 * Can be incorporated into MSBuild
-* Can be incorporated into CI/CD
+* Can be incorporated into CI pipelines
 * Lightweight
 * Can watch assemblies for changes
 
