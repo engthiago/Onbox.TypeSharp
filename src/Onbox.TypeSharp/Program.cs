@@ -22,17 +22,12 @@ namespace Onbox.TypeSharp
 
                                     if (options.Watch)
                                     {
-                                        var assemblyWatcher = container.Resolve<AssemblyFileWatcher>();
-                                        assemblyWatcher.Watch(options);
+                                        Run(options, container);
+                                        Watch(options, container);
                                     }
                                     else
                                     {
-                                        var assemblyProcessor = container.Resolve<AssemblyProcessor>();
-                                        var files = Directory.GetFiles(options.SourcePath, options.FileFilter, SearchOption.AllDirectories);
-                                        foreach (var file in files)
-                                        {
-                                            assemblyProcessor.Process(file);
-                                        }
+                                        Run(options, container);
                                     }
                                 });
             }
@@ -42,6 +37,22 @@ namespace Onbox.TypeSharp
                 Console.WriteLine($"Trace: {ex.StackTrace}");
             }
 
+        }
+
+        private static void Watch(Options options, Container container)
+        {
+            var assemblyWatcher = container.Resolve<AssemblyFileWatcher>();
+            assemblyWatcher.Watch(options);
+        }
+
+        private static void Run(Options options, Container container)
+        {
+            var assemblyProcessor = container.Resolve<AssemblyProcessor>();
+            var files = Directory.GetFiles(options.SourcePath, options.FileFilter, SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                assemblyProcessor.Process(file);
+            }
         }
     }
 }
