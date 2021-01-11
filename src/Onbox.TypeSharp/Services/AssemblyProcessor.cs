@@ -5,12 +5,12 @@ namespace Onbox.TypeSharp.Services
 {
     public class AssemblyProcessor
     {
-        private AssemblyLoader assemblyLoader;
-        private AssemblyTypeExtractor assemblyTypeExtractor;
-        private TypeConverter typeConverter;
-        private FileWritterService fileWritterService;
+        private readonly AssemblyLoader assemblyLoader;
+        private readonly AssemblyTypeExtractor assemblyTypeExtractor;
+        private readonly TypeConverter typeConverter;
+        private readonly FileWritterService fileWritterService;
         private readonly TypeCache typeCache;
-        private Options options;
+        private readonly Options options;
         private readonly TypeNamingService typeNamingService;
 
         public AssemblyProcessor(
