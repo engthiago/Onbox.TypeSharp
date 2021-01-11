@@ -2,16 +2,11 @@
 Commandline app to convert CSharp data models into Typescript:
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
-## Advantages
-* Do not depend o Visual Studio
-* Dotnet 5 based, so it runs wherever dotnet runs
-* Can be incorporated into MSBuild
-* Can be incorporated into CI/CD
-* Lightweight
-* Can watch assemblies for changes
-
-## Disadvantages
-* Can not load runtime dependencies like Microsoft.AspNetCore.Mvc, so it can not run against ASP.NetCore assemblies
+## Instalation via Nuget
+1. Install via Visual Studio Package Manager or Open commandline (inside a dotnet project folder) and type:
+```Install-Package Onbox.TypeSharp```
+2. cd into the "packages\onbox.typesharp\0.1.0\Content\net5.0" folder
+3. Execute commands against .\TypeSharp.exe as shown on examples below
 
 ## Commmandline options
 ``` -s or --source ``` **Required** <br/>
@@ -32,26 +27,37 @@ Tells the app to watch the destination folder and re-run everytime something cha
 ## Example 1
 Converts all the types from one assembly and dumps them into a models folder on the desktop:
 ```
-TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "SampleModels.dll" --destination "C:\Users\MyUser\Desktop\Models"
+.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "SampleModels.dll" --destination "C:\Users\MyUser\Desktop\Models"
 ```
 
 ## Example 2
 Converts all the types from all assemblies in a folder and dump them into a models folder on the desktop:
 ```
-TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
+.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
 ```
 
 ## Example 3
 Converts only types that contains Web.Models on their fully qualified names from one assembly and dumps them into a models folder on the desktop:
 ```
-TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --type-filter "Web.Models" --destination "C:\Users\MyUser\Desktop\Models"
+.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --type-filter "Web.Models" --destination "C:\Users\MyUser\Desktop\Models"
 ```
 
 ## Example 4
 Watches a assembly so everytime it changes, converts all the types and dumps them into a models folder on the desktop:
 ```
-TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
+.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
 ```
+
+## Advantages
+* Do not depend o Visual Studio
+* Dotnet 5 based, so it runs wherever dotnet runs
+* Can be incorporated into MSBuild
+* Can be incorporated into CI/CD
+* Lightweight
+* Can watch assemblies for changes
+
+## Disadvantages
+* Can not load runtime dependencies like Microsoft.AspNetCore.Mvc, so it can not run against ASP.NetCore assemblies
 
 ## Dependencies
 * [Onbox.Di](https://www.nuget.org/packages/Onbox.Di)
