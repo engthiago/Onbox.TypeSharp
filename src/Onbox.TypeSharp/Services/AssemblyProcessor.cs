@@ -64,7 +64,7 @@ namespace Onbox.TypeSharp.Services
                     // If this type passes the type filter
                     if (!string.IsNullOrEmpty(typeFilter) && !type.FullName.ToLower().Contains(typeFilter))
                     {
-                        Console.WriteLine($"Ignoring type: {type.FullName}");
+                        //Console.WriteLine($"Ignoring type: {type.FullName}");
                         continue;
                     }
 
