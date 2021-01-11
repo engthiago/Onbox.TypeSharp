@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Publish Nuget Package
+name: Publish Release / Package
 
 # Controls when the action will run. 
 on:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pack-nuget:
+  release:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -24,8 +24,8 @@ jobs:
     - name: Create Release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ env.GITHUB_REF }}
-        release_name: Release ${{ env.GITHUB_REF }}
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
       id: create_release
