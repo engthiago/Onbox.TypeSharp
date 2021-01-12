@@ -1,16 +1,22 @@
 ﻿using System;
 using System.Collections;
 using System.Linq;
+using System.Reflection;
 
 namespace Onbox.TypeSharp.Services
 {
     public class TypeNamingService
     {
         private readonly TypeUtils typeUtils;
+        private readonly StringCasingService stringCasingService;
 
-        public TypeNamingService(TypeUtils typeUtils)
+        public TypeNamingService(
+            TypeUtils typeUtils,
+            StringCasingService stringCasingService
+            )
         {
             this.typeUtils = typeUtils;
+            this.stringCasingService = stringCasingService;
         }
 
         public string GetImportName(Type type)
@@ -33,6 +39,16 @@ namespace Onbox.TypeSharp.Services
             }
 
             return $"{type.Name.Replace("`1", "<T>")}";
+        }
+
+        public string GetPropertyName(PropertyInfo propInfo, Type type)
+        {
+            if (this.typeUtils.IsNullable(type))
+            {
+                return this.stringCasingService.ConvertToCamelCase( $"{propInfo.Name}?" );
+            }
+
+            return this.stringCasingService.ConvertToCamelCase(propInfo.Name);
         }
 
         public string GetPropertyTypeName(Type type)
@@ -68,6 +84,15 @@ namespace Onbox.TypeSharp.Services
 
                 var arg = args.FirstOrDefault();
                 return $"{arg.Name}[]";
+            }
+            else if (this.typeUtils.IsNullable(type))
+            {
+                var valueProp = type.GetProperty("Value")?.PropertyType;
+                if (valueProp == null)
+                {
+                    throw new Exception($"Could not convert Nullable type: {type.Name}");
+                }
+                return this.GetPropertyTypeName(valueProp);
             }
             else if (type.IsGenericType)
             {

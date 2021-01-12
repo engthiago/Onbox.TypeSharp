@@ -23,6 +23,16 @@ namespace Onbox.TypeSharp.Services
             return type.GetInterfaces().Any(type => type == typeof(IEnumerable));
         }
 
+        public bool IsNullable(Type type)
+        {
+            if (type.Name == "Nullable`1")
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         public bool IsDate(Type type)
         {
             if (type == typeof(DateTime) || type == typeof(DateTimeOffset))
