@@ -56,7 +56,7 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 ```
 
 ## Example 5
-Msbuild Target for running TypeSharp after build. You could add multiple runs of TypesSharp by adding more <Exec> tags:
+Msbuild Target for running TypeSharp after build. You could add multiple runs of TypeSharp by adding more <Exec> tags:
 ```
 <Project>
   <Target Name="TypeSharp" AfterTargets="CoreBuild">
@@ -78,6 +78,7 @@ Msbuild Target for running TypeSharp after build. You could add multiple runs of
 
 ## Dev-Dependencies
 * [Onbox.Di](https://www.nuget.org/packages/Onbox.Di)
+* [Onbox.Core](https://www.nuget.org/packages/Onbox.Core)
 * [CommandLineParser](https://www.nuget.org/packages/CommandLineParser)
 
 ## Runtime Dependencies
