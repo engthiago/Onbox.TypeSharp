@@ -10,7 +10,6 @@ namespace Onbox.TypeSharp.Services
     {
         private readonly TypeNamingService typeNamingService;
         private readonly PropertyUtils propertyUtils;
-        private readonly StringCasingService stringCasingService;
         private readonly TypeCache typeCache;
         private readonly FileWritterService fileWritterService;
         private readonly TypeUtils typeUtils;
@@ -19,7 +18,6 @@ namespace Onbox.TypeSharp.Services
         public TypeConverter(
             TypeNamingService typeNamingService,
             PropertyUtils propertyUtils,
-            StringCasingService stringCasingService,
             TypeCache typeCache,
             FileWritterService fileWritterService,
             TypeUtils typeUtils,
@@ -28,7 +26,6 @@ namespace Onbox.TypeSharp.Services
         {
             this.typeNamingService = typeNamingService;
             this.propertyUtils = propertyUtils;
-            this.stringCasingService = stringCasingService;
             this.typeCache = typeCache;
             this.fileWritterService = fileWritterService;
             this.typeUtils = typeUtils;
