@@ -55,6 +55,16 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 .\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
 ```
 
+## Example 5
+Msbuild for running TypeSharp after build. You could add multiple runs of TypesSharp by adding more <Exec> tags.
+```
+<Project>
+    <Target Name="TypeSharp" AfterTargets="CoreBuild">
+    <Exec Command="..\..\typesharp\TypeSharp.exe --source bin\$(Configuration) --file-filter Web.Models.dll --destination ..\angular-app\src\dtos" />
+  </Target>
+</Project>
+```
+
 ## Advantages
 * Do not depend o Visual Studio
 * Dotnet 5 based, so it runs wherever dotnet runs
