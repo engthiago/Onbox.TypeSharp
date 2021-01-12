@@ -48,6 +48,11 @@ namespace Onbox.TypeSharp.Services
             }
             else if (type.GetInterfaces().Any(type => type == typeof(IList)))
             {
+                if (type.IsArray)
+                {
+                    // The name includes the square brackets already, for instance string[]
+                    return $"{type.Name}";
+                }
                 var att = type.GetGenericArguments().FirstOrDefault();
                 return $"{att.Name}[]";
             }
