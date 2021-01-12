@@ -91,7 +91,7 @@ namespace Onbox.TypeSharp.Services
                 this.fileWritterService.Write(convertedProp, filePath);
                 classBodyBuilder.Append($" extends {baseTypeName}");
 
-                importStatments = $"import {{ {this.typeNamingService.GetImportName(type.BaseType)} }} from \"./{this.typeNamingService.GetImportName(type.BaseType)}\"";
+                importStatments = $"import {{ {this.typeNamingService.GetImportName(type.BaseType)} }} from \"./{this.typeNamingService.GetImportName(type.BaseType)}\";";
             }
 
             classBodyBuilder.Append(" {");
@@ -101,7 +101,7 @@ namespace Onbox.TypeSharp.Services
             {
                 if (this.propertyUtils.ShouldImport(prop.PropertyType) && prop.PropertyType != type)
                 {
-                    var importStatement = $"import {{ {this.typeNamingService.GetImportName(prop.PropertyType)} }} from \"./{this.typeNamingService.GetImportName(prop.PropertyType)}\"";
+                    var importStatement = $"import {{ {this.typeNamingService.GetImportName(prop.PropertyType)} }} from \"./{this.typeNamingService.GetImportName(prop.PropertyType)}\";";
 
                     if (importStatments == string.Empty)
                     {
