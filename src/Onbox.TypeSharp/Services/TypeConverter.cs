@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,6 +13,7 @@ namespace Onbox.TypeSharp.Services
         private readonly StringCasingService stringCasingService;
         private readonly TypeCache typeCache;
         private readonly FileWritterService fileWritterService;
+        private readonly TypeUtils typeUtils;
         private readonly Options options;
 
         public TypeConverter(
@@ -22,6 +22,7 @@ namespace Onbox.TypeSharp.Services
             StringCasingService stringCasingService,
             TypeCache typeCache,
             FileWritterService fileWritterService,
+            TypeUtils typeUtils,
             Options options
             )
         {
@@ -30,6 +31,7 @@ namespace Onbox.TypeSharp.Services
             this.stringCasingService = stringCasingService;
             this.typeCache = typeCache;
             this.fileWritterService = fileWritterService;
+            this.typeUtils = typeUtils;
             this.options = options;
         }
 
@@ -70,10 +72,10 @@ namespace Onbox.TypeSharp.Services
             var importStatments = string.Empty;
             var classBodyBuilder = new StringBuilder();
 
-            PropertyInfo[] props = null;
-            if (type.GetInterfaces().Any(i => i == typeof(IList)))
+            PropertyInfo[] props;
+            if (this.typeUtils.IsEnumerable(type))
             {
-                var arg = type.GetGenericArguments().FirstOrDefault();
+                var arg = type.GetElementType();
                 props = arg.GetProperties(BindingFlags.Public | BindingFlags.Instance);
             }
             else
@@ -99,10 +101,23 @@ namespace Onbox.TypeSharp.Services
 
             foreach (var prop in props)
             {
-                if (this.propertyUtils.ShouldImport(prop.PropertyType) && prop.PropertyType != type)
+                var contextPropType = prop.PropertyType;
+                if (this.propertyUtils.ShouldImport(contextPropType) && contextPropType != type)
                 {
-                    var importStatement = $"import {{ {this.typeNamingService.GetImportName(prop.PropertyType)} }} from \"./{this.typeNamingService.GetImportName(prop.PropertyType)}\";";
+                    if (this.typeUtils.IsEnumerable(contextPropType) || type.IsGenericType)
+                    {
+                        contextPropType = contextPropType.GetElementType();
+                    }
 
+                    if (!this.typeCache.Contains(contextPropType))
+                    {
+                        var convertedProp = this.Convert(contextPropType);
+                        var typeName = this.typeNamingService.GetImportName(contextPropType);
+                        var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
+                        this.fileWritterService.Write(convertedProp, filePath);
+                    }
+
+                    var importStatement = $"import {{ {this.typeNamingService.GetImportName(contextPropType)} }} from \"./{this.typeNamingService.GetImportName(contextPropType)}\";";
                     if (importStatments == string.Empty)
                     {
                         importStatments += importStatement;
@@ -110,14 +125,6 @@ namespace Onbox.TypeSharp.Services
                     else if (!importStatments.Contains(importStatement))
                     {
                         importStatments += Environment.NewLine + importStatement;
-                    }
-
-                    if (!this.typeCache.Contains(prop.PropertyType))
-                    {
-                        var convertedProp = this.Convert(prop.PropertyType);
-                        var typeName = this.typeNamingService.GetImportName(prop.PropertyType);
-                        var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
-                        this.fileWritterService.Write(convertedProp, filePath);
                     }
                 }
                 classBodyBuilder.AppendLine($"   {this.stringCasingService.ConvertToCamelCase(prop.Name)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
