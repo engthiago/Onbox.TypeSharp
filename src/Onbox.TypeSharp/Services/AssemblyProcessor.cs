@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace Onbox.TypeSharp.Services
 {
@@ -73,6 +75,25 @@ namespace Onbox.TypeSharp.Services
                     var filePath = Path.Combine(outputFolder, typeName + ".ts");
                     this.fileWritterService.Write(result, filePath);
                 }
+
+                if (this.options.ExportModule)
+                {
+                    var fileName = Path.GetFileNameWithoutExtension(fullAssemblyPath);
+                    var moduleFileName = $"{fileName}.module";
+                    var filePath = Path.Combine(outputFolder, moduleFileName + ".ts");
+                    Console.WriteLine($"Creating Exports: {filePath}");
+
+                    var exportsBuilder = new StringBuilder();
+                    var sortedTypes = typeCache.GetCachedTypes().OrderBy(t => t.Name);
+                    foreach (var type in sortedTypes)
+                    {
+                        var exportType = $"export {{ {this.typeNamingService.GetImportName(type)} }} from \"./{this.typeNamingService.GetImportName(type)}\";";
+                        exportsBuilder.AppendLine(exportType);
+                    }
+
+                    File.WriteAllText(filePath, exportsBuilder.ToString());
+                }
+
                 Console.WriteLine("Done...");
             }
             catch (Exception ex)

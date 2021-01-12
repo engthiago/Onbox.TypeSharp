@@ -17,6 +17,12 @@ namespace Onbox.TypeSharp.Services
             return processedTypes.Add(type);
         }
 
+        public IList<Type> GetCachedTypes()
+        {
+            var list = new List<Type>(processedTypes);
+            return list;
+        }
+
         public void ClearCache()
         {
             processedTypes.Clear();

@@ -19,6 +19,9 @@ namespace Onbox.TypeSharp
 
         [Option('w', "watch", Required = false, HelpText = "Tells the app to watch the destination folder and re-run everytime something changes.")]
         public bool Watch { get; set; }
+
+        [Option('m', "export-module", Required = false, HelpText = "Create an exports module file containing all converted models.")]
+        public bool ExportModule { get; set; }
     }
 
 }

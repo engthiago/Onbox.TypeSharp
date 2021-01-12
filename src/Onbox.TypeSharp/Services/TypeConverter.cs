@@ -61,6 +61,7 @@ namespace Onbox.TypeSharp.Services
             enumBodyBuilder.AppendLine("}");
 
             var result = enumBodyBuilder.ToString();
+            this.typeCache.Add(type);
             return result;
         }
 
