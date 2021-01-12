@@ -82,7 +82,21 @@ namespace Onbox.TypeSharp.Services
             }
 
             classBodyBuilder.AppendLine();
-            classBodyBuilder.AppendLine($"export interface {this.typeNamingService.GetDefinitionName(type)}" + " {");
+            classBodyBuilder.Append($"export interface {this.typeNamingService.GetDefinitionName(type)}");
+            if (type.BaseType != null)
+            {
+                var convertedProp = this.Convert(type.BaseType);
+                var baseTypeName = this.typeNamingService.GetImportName(type.BaseType);
+                var filePath = Path.Combine(options.DestinationPath, baseTypeName + ".ts");
+                this.fileWritterService.Write(convertedProp, filePath);
+                classBodyBuilder.Append($" extends {baseTypeName}");
+
+                importStatments = $"import {{ {this.typeNamingService.GetImportName(type.BaseType)} }} from \"./{this.typeNamingService.GetImportName(type.BaseType)}\"";
+            }
+
+            classBodyBuilder.Append(" {");
+            classBodyBuilder.AppendLine();
+
             foreach (var prop in props)
             {
                 if (this.propertyUtils.ShouldImport(prop.PropertyType) && prop.PropertyType != type)
