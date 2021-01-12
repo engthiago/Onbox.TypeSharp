@@ -4,11 +4,22 @@ namespace Onbox.TypeSharp.Services
 {
     public class PropertyUtils
     {
+        private readonly TypeUtils typeUtils;
+
+        public PropertyUtils(TypeUtils typeUtils)
+        {
+            this.typeUtils = typeUtils;
+        }
+
         public bool ShouldImport(Type type)
         {
-            if (type.IsArray || type.IsGenericType)
+            if (typeUtils.IsEnumerable(type) || type.IsGenericType)
             {
                 var elemType = type.GetElementType();
+                if (elemType == null)
+                {
+                    return false;
+                }
                 return ShouldImport(elemType);
             }
 
@@ -17,8 +28,7 @@ namespace Onbox.TypeSharp.Services
                 return true;
             }
 
-            var constructor = type.GetConstructor(Type.EmptyTypes);
-            if (constructor == null)
+            if (this.typeUtils.IsPrimitiveType(type))
             {
                 return false;
             }
