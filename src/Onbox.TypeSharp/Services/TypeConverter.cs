@@ -83,7 +83,7 @@ namespace Onbox.TypeSharp.Services
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.Append($"export interface {this.typeNamingService.GetDefinitionName(type)}");
-            if (type.BaseType != null)
+            if (type.BaseType != null && type.BaseType != typeof(object))
             {
                 var convertedProp = this.Convert(type.BaseType);
                 var baseTypeName = this.typeNamingService.GetImportName(type.BaseType);
