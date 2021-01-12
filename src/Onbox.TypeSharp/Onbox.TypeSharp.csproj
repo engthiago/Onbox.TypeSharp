@@ -6,14 +6,14 @@
     <AssemblyName>TypeSharp</AssemblyName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Onbox.TypeSharp</PackageId>
-    <Version>0.1.1</Version>
+    <Version>0.2.1</Version>
     <Authors>Thiago Almeida</Authors>
     <Company>Onbox</Company>
     <Description>Command line app to convert CSharp data models into Typescript</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/engthiago/Onbox.TypeSharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>Typescript, C#, CSharp, DataModel</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageIcon>onbox.png</PackageIcon>
   </PropertyGroup>
 
@@ -24,6 +24,8 @@
     <RuntimeIdentifier>win-x86</RuntimeIdentifier>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishReadyToRun>true</PublishReadyToRun>
+    <PackageProjectUrl>https://github.com/engthiago/Onbox.TypeSharp</PackageProjectUrl>
+    <PackageTags>Typescript, C#, CSharp, DataModel</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
