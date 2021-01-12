@@ -17,7 +17,7 @@ Commandline app to convert CSharp data models into Typescript:
 
 ## Commmandline options
 ``` -s or --source ``` **Required** <br/>
-The full path name of the folder to be converted and/or to be watched. Sub diretories will also be considered. This path is not case sensitive.
+The full path name of the folder to be converted and/or to be watched. Sub diretories will also be considered. This path is not case sensitive. Relative paths work.
 
 ``` -f or --file-filter ``` **Required** <br/>
 Filters the assemblies (just pure assembly names not full name) to be converted. This filter is not case sensitive.
@@ -26,7 +26,7 @@ Filters the assemblies (just pure assembly names not full name) to be converted.
 Filters the types (fully qualified names) to be converted. This filter is not case sensitive. Notice that if another model depends on ignored ones, they will still be converted.
 
 ``` -d or --destination ``` **Required** <br/>
-The full path name of the folder where the Typescript files will be saved.
+The full path name of the folder where the Typescript files will be saved. Relative paths work.
 
 ``` -w or --watch ``` **Optional** <br/>
 Tells the app to watch the destination folder and re-run everytime something changes.
@@ -56,7 +56,7 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 ```
 
 ## Example 5
-Msbuild for running TypeSharp after build. You could add multiple runs of TypesSharp by adding more <Exec> tags.
+Msbuild Target for running TypeSharp after build. You could add multiple runs of TypesSharp by adding more <Exec> tags:
 ```
 <Project>
   <Target Name="TypeSharp" AfterTargets="CoreBuild">
@@ -66,8 +66,8 @@ Msbuild for running TypeSharp after build. You could add multiple runs of TypesS
 ```
 
 ## Advantages
-* Do not depend o Visual Studio
-* Dotnet 5 based, so it runs wherever dotnet runs
+* Doesn't depend o Visual Studio
+* .Net5 based, so it runs wherever dotnet runs
 * Can be incorporated into MSBuild
 * Can be incorporated into CI pipelines
 * Lightweight
@@ -81,4 +81,4 @@ Msbuild for running TypeSharp after build. You could add multiple runs of TypesS
 * [CommandLineParser](https://www.nuget.org/packages/CommandLineParser)
 
 ## Runtime Dependencies
-All runtime dependencies are already packaged when installed
+All runtime dependencies are already packaged when installed. Not even .Net5 is needed, since everything is bundled in the exe.
