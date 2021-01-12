@@ -59,7 +59,7 @@ Watches a assembly so everytime it changes, converts all the types and dumps the
 Msbuild for running TypeSharp after build. You could add multiple runs of TypesSharp by adding more <Exec> tags.
 ```
 <Project>
-    <Target Name="TypeSharp" AfterTargets="CoreBuild">
+  <Target Name="TypeSharp" AfterTargets="CoreBuild">
     <Exec Command="..\..\typesharp\TypeSharp.exe --source bin\$(Configuration) --file-filter Web.Models.dll --destination ..\angular-app\src\dtos" />
   </Target>
 </Project>
