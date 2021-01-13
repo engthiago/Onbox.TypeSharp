@@ -125,14 +125,17 @@ namespace Onbox.TypeSharp.Services
                         this.HandlePropertyWritting(type, contextPropType);
                     }
 
-                    var importStatement = $"import {{ {this.typeNamingService.GetImportName(contextPropType)} }} from \"./{this.typeNamingService.GetImportName(contextPropType)}\";";
-                    if (importStatments == string.Empty)
+                    if (contextPropType != type)
                     {
-                        importStatments += importStatement;
-                    }
-                    else if (!importStatments.Contains(importStatement))
-                    {
-                        importStatments += Environment.NewLine + importStatement;
+                        var importStatement = $"import {{ {this.typeNamingService.GetImportName(contextPropType)} }} from \"./{this.typeNamingService.GetImportName(contextPropType)}\";";
+                        if (importStatments == string.Empty)
+                        {
+                            importStatments += importStatement;
+                        }
+                        else if (!importStatments.Contains(importStatement))
+                        {
+                            importStatments += Environment.NewLine + importStatement;
+                        }
                     }
                 }
                 classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
