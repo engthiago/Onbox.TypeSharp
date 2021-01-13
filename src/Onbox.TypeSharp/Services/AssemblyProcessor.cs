@@ -79,7 +79,7 @@ namespace Onbox.TypeSharp.Services
                 if (this.options.ExportModule)
                 {
                     var fileName = Path.GetFileNameWithoutExtension(fullAssemblyPath);
-                    var moduleFileName = $"{fileName}.module";
+                    var moduleFileName = $"{fileName}.Module";
                     var filePath = Path.Combine(outputFolder, moduleFileName + ".ts");
                     Console.WriteLine($"Creating Exports: {filePath}");
 
