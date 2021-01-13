@@ -5,6 +5,7 @@ export interface Person {
    name: string;
    company: string;
    company4: string;
+   money?: number;
    related: SubPerson;
    related2: SubPerson;
    persons: SubPerson[];

@@ -15,6 +15,11 @@ namespace Onbox.TypeSharp.Services
 
         public bool ShouldImport(Type type)
         {
+            if (type.IsValueType)
+            {
+                return false;
+            }
+
             if (typeUtils.IsCollection(type))
             {
                 var elemType = this.genericUtils.GetGenericType(type);
