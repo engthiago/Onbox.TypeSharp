@@ -7,8 +7,8 @@ export interface Person {
    company4: string;
    related: SubPerson;
    related2: SubPerson;
-   persons: SubPerson;
-   persons2: SubPerson;
+   persons: SubPerson[];
+   persons2: SubPerson[];
    bills: string[];
    bills2: string[];
    favoriteNumbers: number[];

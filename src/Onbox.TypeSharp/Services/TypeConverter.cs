@@ -135,7 +135,7 @@ namespace Onbox.TypeSharp.Services
                         importStatments += Environment.NewLine + importStatement;
                     }
                 }
-                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(contextPropType)};");
+                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
             }
             classBodyBuilder.AppendLine("}");
 
