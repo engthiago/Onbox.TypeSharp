@@ -9,14 +9,17 @@ namespace Onbox.TypeSharp.Services
     {
         private readonly TypeUtils typeUtils;
         private readonly StringCasingService stringCasingService;
+        private readonly GenericTypeUtils genericTypeUtils;
 
         public TypeNamingService(
             TypeUtils typeUtils,
-            StringCasingService stringCasingService
+            StringCasingService stringCasingService,
+            GenericTypeUtils genericTypeUtils
             )
         {
             this.typeUtils = typeUtils;
             this.stringCasingService = stringCasingService;
+            this.genericTypeUtils = genericTypeUtils;
         }
 
         public string GetImportName(Type type)
@@ -71,19 +74,8 @@ namespace Onbox.TypeSharp.Services
             }
             else if (this.typeUtils.IsCollection(type))
             {
-                if (type.IsArray)
-                {
-                    // The name includes the square brackets already, for instance string[]
-                    return $"{type.Name}";
-                }
-                var args = type.GetGenericArguments();
-                if (args.Count() > 1)
-                {
-                    throw new Exception($"List types with more than one generic arguments are not supported: {type.Name}");
-                }
-
-                var arg = args.FirstOrDefault();
-                return $"{arg.Name}[]";
+                var arg = this.genericTypeUtils.GetGenericType(type);
+                return $"{this.GetPropertyTypeName(arg)}[]";
             }
             else if (this.typeUtils.IsNullable(type))
             {

@@ -107,29 +107,22 @@ namespace Onbox.TypeSharp.Services
                 var contextPropType = prop.PropertyType;
                 if (this.propertyUtils.ShouldImport(contextPropType) && contextPropType != type)
                 {
+                    // Collection needs to be checked for its generic item type
                     if (this.typeUtils.IsCollection(contextPropType))
                     {
                         contextPropType = this.genericTypeUtils.GetGenericType(contextPropType);
                     }
 
+                    // Generic properties need to be checked for its own as well as its generic item type
                     if (contextPropType.IsGenericType)
                     {
                         var genericType = this.genericTypeUtils.GetGenericType(contextPropType);
-                        if (this.propertyUtils.ShouldImport(genericType) && genericType != type && !this.typeCache.Contains(genericType))
-                        {
-                            var convertedProp = this.Convert(genericType);
-                            var typeName = this.typeNamingService.GetImportName(genericType);
-                            var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
-                            this.fileWritterService.Write(convertedProp, filePath);
-                        }
+                        this.HandlePropertyWritting(type, genericType);
                     }
 
                     if (!this.typeCache.Contains(contextPropType))
                     {
-                        var convertedProp = this.Convert(contextPropType);
-                        var typeName = this.typeNamingService.GetImportName(contextPropType);
-                        var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
-                        this.fileWritterService.Write(convertedProp, filePath);
+                        this.HandlePropertyWritting(type, contextPropType);
                     }
 
                     var importStatement = $"import {{ {this.typeNamingService.GetImportName(contextPropType)} }} from \"./{this.typeNamingService.GetImportName(contextPropType)}\";";
@@ -142,7 +135,7 @@ namespace Onbox.TypeSharp.Services
                         importStatments += Environment.NewLine + importStatement;
                     }
                 }
-                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
+                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(contextPropType)};");
             }
             classBodyBuilder.AppendLine("}");
 
@@ -150,6 +143,17 @@ namespace Onbox.TypeSharp.Services
 
             this.typeCache.Add(type);
             return result;
+        }
+
+        private void HandlePropertyWritting(Type parentType, Type propType)
+        {
+            if (this.propertyUtils.ShouldImport(propType) && propType != parentType && !this.typeCache.Contains(propType))
+            {
+                var convertedProp = this.Convert(propType);
+                var typeName = this.typeNamingService.GetImportName(propType);
+                var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
+                this.fileWritterService.Write(convertedProp, filePath);
+            }
         }
     }
 }
