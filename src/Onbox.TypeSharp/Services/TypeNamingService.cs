@@ -69,7 +69,7 @@ namespace Onbox.TypeSharp.Services
             {
                 return "Date";
             }
-            else if (this.typeUtils.IsEnumerable(type))
+            else if (this.typeUtils.IsCollection(type))
             {
                 if (type.IsArray)
                 {

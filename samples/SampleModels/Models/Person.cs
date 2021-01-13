@@ -10,6 +10,7 @@ namespace SampleModels.Models
         public SubPerson Related { get; set; }
         public SubPerson Related2 { get; set; }
         public List<SubPerson> Persons { get; set; }
+        public SubPerson[] Persons2 { get; set; }
         public GenericPerson<SubPerson> Data { get; set; }
     }
 }

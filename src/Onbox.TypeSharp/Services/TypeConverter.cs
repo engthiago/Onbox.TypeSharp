@@ -13,6 +13,7 @@ namespace Onbox.TypeSharp.Services
         private readonly TypeCache typeCache;
         private readonly FileWritterService fileWritterService;
         private readonly TypeUtils typeUtils;
+        private readonly GenericTypeUtils genericTypeUtils;
         private readonly Options options;
 
         public TypeConverter(
@@ -21,6 +22,7 @@ namespace Onbox.TypeSharp.Services
             TypeCache typeCache,
             FileWritterService fileWritterService,
             TypeUtils typeUtils,
+            GenericTypeUtils genericTypeUtils,
             Options options
             )
         {
@@ -29,6 +31,7 @@ namespace Onbox.TypeSharp.Services
             this.typeCache = typeCache;
             this.fileWritterService = fileWritterService;
             this.typeUtils = typeUtils;
+            this.genericTypeUtils = genericTypeUtils;
             this.options = options;
         }
 
@@ -71,7 +74,7 @@ namespace Onbox.TypeSharp.Services
             var classBodyBuilder = new StringBuilder();
 
             PropertyInfo[] props;
-            if (this.typeUtils.IsEnumerable(type))
+            if (this.typeUtils.IsCollection(type))
             {
                 var arg = type.GetElementType();
                 props = arg.GetProperties(BindingFlags.Public | BindingFlags.Instance);
@@ -83,6 +86,8 @@ namespace Onbox.TypeSharp.Services
 
             classBodyBuilder.AppendLine();
             classBodyBuilder.Append($"export interface {this.typeNamingService.GetDefinitionName(type)}");
+
+            // Inheritance
             if (type.BaseType != null && type.BaseType != typeof(object))
             {
                 var convertedProp = this.Convert(type.BaseType);
@@ -102,9 +107,21 @@ namespace Onbox.TypeSharp.Services
                 var contextPropType = prop.PropertyType;
                 if (this.propertyUtils.ShouldImport(contextPropType) && contextPropType != type)
                 {
-                    if (this.typeUtils.IsEnumerable(contextPropType) || type.IsGenericType)
+                    if (this.typeUtils.IsCollection(contextPropType))
                     {
-                        contextPropType = contextPropType.GetElementType();
+                        contextPropType = this.genericTypeUtils.GetGenericType(contextPropType);
+                    }
+
+                    if (contextPropType.IsGenericType)
+                    {
+                        var genericType = this.genericTypeUtils.GetGenericType(contextPropType);
+                        if (this.propertyUtils.ShouldImport(genericType) && genericType != type && !this.typeCache.Contains(genericType))
+                        {
+                            var convertedProp = this.Convert(genericType);
+                            var typeName = this.typeNamingService.GetImportName(genericType);
+                            var filePath = Path.Combine(options.DestinationPath, typeName + ".ts");
+                            this.fileWritterService.Write(convertedProp, filePath);
+                        }
                     }
 
                     if (!this.typeCache.Contains(contextPropType))

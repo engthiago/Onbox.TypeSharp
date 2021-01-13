@@ -5,22 +5,25 @@ namespace Onbox.TypeSharp.Services
     public class PropertyUtils
     {
         private readonly TypeUtils typeUtils;
+        private readonly GenericTypeUtils genericUtils;
 
-        public PropertyUtils(TypeUtils typeUtils)
+        public PropertyUtils(TypeUtils typeUtils, GenericTypeUtils genericUtils)
         {
             this.typeUtils = typeUtils;
+            this.genericUtils = genericUtils;
         }
 
         public bool ShouldImport(Type type)
         {
-            if (typeUtils.IsEnumerable(type) || type.IsGenericType)
+            if (typeUtils.IsCollection(type))
             {
-                var elemType = type.GetElementType();
-                if (elemType == null)
-                {
-                    return false;
-                }
+                var elemType = this.genericUtils.GetGenericType(type);
                 return ShouldImport(elemType);
+            }
+
+            if (type.IsGenericType)
+            {
+                return true;
             }
 
             if (type.IsEnum)
@@ -32,10 +35,8 @@ namespace Onbox.TypeSharp.Services
             {
                 return false;
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
     }
 }

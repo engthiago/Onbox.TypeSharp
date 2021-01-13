@@ -17,10 +17,10 @@ namespace Onbox.TypeSharp.Services
             return false;
         }
 
-        public bool IsEnumerable(Type type)
+        public bool IsCollection(Type type)
         {
             // This will be true for Arrays too
-            return type.GetInterfaces().Any(type => type == typeof(IEnumerable));
+            return type.GetInterfaces().Any(type => type.Name == "ICollection`1");
         }
 
         public bool IsNullable(Type type)
