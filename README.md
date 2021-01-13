@@ -31,6 +31,9 @@ The full path name of the folder where the Typescript files will be saved. Relat
 ``` -w or --watch ``` **Optional** <br/>
 Tells the app to watch the destination folder and re-run everytime something changes.
 
+``` -m or --export-module ``` **Optional** <br/>
+Creates an exports module file containing all converted models.
+
 ## Example 1
 Converts all the types from one assembly and dumps them into a models folder on the desktop:
 ```
