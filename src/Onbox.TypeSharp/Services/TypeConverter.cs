@@ -37,6 +37,8 @@ namespace Onbox.TypeSharp.Services
 
         public string Convert(Type type)
         {
+            this.typeCache.Add(type);
+
             if (type.IsEnum)
             {
                 return this.ConvertEnum(type);
@@ -114,13 +116,16 @@ namespace Onbox.TypeSharp.Services
                     }
 
                     // Generic properties need to be checked for its own as well as its generic item type
-                    if (contextPropType.IsGenericType)
+                    if (prop.PropertyType.IsGenericType && !this.typeUtils.IsCollection(prop.PropertyType))
                     {
-                        var genericType = this.genericTypeUtils.GetGenericType(contextPropType);
+                        var genericType = this.genericTypeUtils.GetGenericType(prop.PropertyType);
                         this.HandlePropertyWritting(type, genericType);
-                    }
 
-                    if (!this.typeCache.Contains(contextPropType))
+                        var fullName = $"{contextPropType.Namespace}.{contextPropType.Name}";
+                        var declarationType = contextPropType.Assembly.GetType(fullName);
+                        this.HandlePropertyWritting(type, declarationType);
+                    }
+                    else if (!this.typeCache.Contains(contextPropType))
                     {
                         this.HandlePropertyWritting(type, contextPropType);
                     }
@@ -143,8 +148,6 @@ namespace Onbox.TypeSharp.Services
             classBodyBuilder.AppendLine("}");
 
             var result = importStatments.Any() ? importStatments + Environment.NewLine + classBodyBuilder.ToString() : classBodyBuilder.ToString();
-
-            this.typeCache.Add(type);
             return result;
         }
 

@@ -19,5 +19,7 @@ export interface Person {
    favoriteNumbers: number[];
    favoriteNumbers2: number[];
    data: GenericPerson<SubPerson>;
+   data2: GenericPerson<Person>;
+   data3: GenericPerson<GenericPerson<Person>>;
    accessLevel: AccessLevel;
 }

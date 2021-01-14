@@ -1,5 +1,5 @@
-﻿import { SubPerson } from "./SubPerson";
+﻿import { Person } from "./Person";
 
 export interface GenericPerson<T> {
-   data: SubPerson;
+   data: Person;
 }

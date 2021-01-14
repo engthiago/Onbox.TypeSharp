@@ -95,7 +95,7 @@ namespace Onbox.TypeSharp.Services
                 }
 
                 var arg = args.FirstOrDefault();
-                return $"{type.Name.Replace("`1", "")}<{arg.Name}>";
+                return $"{type.Name.Replace("`1", "")}<{GetPropertyTypeName(arg)}>";
             }
             else if (type.IsClass || type.IsEnum)
             {

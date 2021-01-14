@@ -20,7 +20,8 @@ namespace SampleModels.Models
         public List<int> FavoriteNumbers { get; set; }
         public int[] FavoriteNumbers2 { get; set; }
         public GenericPerson<SubPerson> Data { get; set; }
-        //public GenericPerson<Person> Data2 { get; set; }
+        public GenericPerson<Person> Data2 { get; set; }
+        public GenericPerson<GenericPerson<Person>> Data3 { get; set; }
         public AccessLevel AccessLevel { get; set; }
     }
 }
