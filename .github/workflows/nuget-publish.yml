@@ -24,9 +24,9 @@ jobs:
     - name: Create Release
       uses: actions/create-release@v1
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
-        draft: false
+        tag_name: ${{ github.run.id }}
+        release_name: Release ${{ github.run.id }}
+        draft: true
         prerelease: false
       id: create_release
       env:
