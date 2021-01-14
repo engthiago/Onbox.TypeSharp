@@ -15,6 +15,11 @@ namespace Onbox.TypeSharp.Services
 
         public bool ShouldImport(Type type)
         {
+            if (type.IsEnum)
+            {
+                return true;
+            }
+
             if (type.IsValueType)
             {
                 return false;
@@ -27,11 +32,6 @@ namespace Onbox.TypeSharp.Services
             }
 
             if (type.IsGenericType)
-            {
-                return true;
-            }
-
-            if (type.IsEnum)
             {
                 return true;
             }

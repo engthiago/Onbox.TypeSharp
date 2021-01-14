@@ -84,7 +84,7 @@ namespace Onbox.TypeSharp.Services
                     Console.WriteLine($"Creating Exports: {filePath}");
 
                     var exportsBuilder = new StringBuilder();
-                    var sortedTypes = typeCache.GetCachedTypes().OrderBy(t => t.Name);
+                    var sortedTypes = typeCache.GetCachedTypes().Distinct().OrderBy(t => t.Name);
                     foreach (var type in sortedTypes)
                     {
                         var exportType = $"export {{ {this.typeNamingService.GetImportName(type)} }} from \"./{this.typeNamingService.GetImportName(type)}\";";

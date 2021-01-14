@@ -10,12 +10,18 @@ namespace SampleModels.Models
         public int? Money { get; set; }
         public SubPerson Related { get; set; }
         public SubPerson Related2 { get; set; }
+        public Person Related3 { get; set; }
         public List<SubPerson> Persons { get; set; }
         public SubPerson[] Persons2 { get; set; }
+        public List<Person> Children { get; set; }
+        public Person[] Children2 { get; set; }
         public List<string> Bills { get; set; }
         public string[] Bills2 { get; set; }
         public List<int> FavoriteNumbers { get; set; }
         public int[] FavoriteNumbers2 { get; set; }
         public GenericPerson<SubPerson> Data { get; set; }
+        public GenericPerson<Person> Data2 { get; set; }
+        public GenericPerson<GenericPerson<Person>> Data3 { get; set; }
+        public AccessLevel AccessLevel { get; set; }
     }
 }
