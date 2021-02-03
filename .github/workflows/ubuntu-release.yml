@@ -1,0 +1,25 @@
+name: .NET Ubuntu
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Restore dependencies
+      run: dotnet restore "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+    - name: Build
+      run: dotnet build "src/Onbox.TypeSharp/Onbox.TypeSharp.csproj"
+    - name: Build and Publish
+      run: dotnet publish "src\Onbox.TypeSharp\Onbox.TypeSharp.csproj" -c Release
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2.2.2
+      with:
+        name: ubuntu-release
+        path: src\Onbox.TypeSharp\bin\Release\net5.0
+        error: "Error publishing artifact"
