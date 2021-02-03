@@ -55,7 +55,7 @@ Converts only types that contains Web.Models on their fully qualified names from
 ## Example 4
 Watches a assembly so everytime it changes, converts all the types and dumps them into a models folder on the desktop:
 ```
-.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
+.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --type-filter "Web.Models" --destination "C:\Users\MyUser\Desktop\Models" --watch
 ```
 
 ## Example 5
