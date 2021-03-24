@@ -1,4 +1,5 @@
 export { AccessLevel } from "./AccessLevel";
+export { ClassWithEvents } from "./ClassWithEvents";
 export { GenericPerson } from "./GenericPerson";
 export { GenericPerson } from "./GenericPerson";
 export { Person } from "./Person";

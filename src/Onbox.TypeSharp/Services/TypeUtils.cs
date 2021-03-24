@@ -6,6 +6,21 @@ namespace Onbox.TypeSharp.Services
 {
     public class TypeUtils
     {
+        public bool IsDelegate(Type type)
+        {
+            var currentBase = type;
+            while (currentBase != null)
+            {
+                if (currentBase.IsSubclassOf(typeof(Delegate)) || currentBase == typeof(Delegate))
+                {
+                    return true;
+                }
+                currentBase = currentBase.BaseType;
+            }
+
+            return false;
+        }
+
         public bool IsPrimitiveType(Type type)
         {
             var constructor = type.GetConstructor(Type.EmptyTypes);

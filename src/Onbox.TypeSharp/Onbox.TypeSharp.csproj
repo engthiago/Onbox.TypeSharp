@@ -6,7 +6,7 @@
     <AssemblyName>TypeSharp</AssemblyName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <PackageId>Onbox.TypeSharp</PackageId>
-    <Version>0.3.6</Version>
+    <Version>0.3.7</Version>
     <Authors>Thiago Almeida</Authors>
     <Company>Onbox</Company>
     <Description>Command line app to convert CSharp data models into Typescript</Description>
@@ -30,8 +30,8 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
-    <PackageReference Include="Onbox.Core" Version="8.0.0" />
-    <PackageReference Include="Onbox.Di" Version="8.0.0" />
+    <PackageReference Include="Onbox.Core" Version="9.0.0" />
+    <PackageReference Include="Onbox.Di" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

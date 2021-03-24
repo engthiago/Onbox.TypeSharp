@@ -72,6 +72,10 @@ namespace Onbox.TypeSharp.Services
             {
                 return "Date";
             }
+            else if (this.typeUtils.IsDelegate(type))
+            {
+                return "CustomEvent";
+            }
             else if (this.typeUtils.IsCollection(type))
             {
                 var arg = this.genericTypeUtils.GetGenericType(type);
