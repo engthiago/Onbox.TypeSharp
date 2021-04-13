@@ -79,6 +79,8 @@ namespace Onbox.TypeSharp.Services
                 || type == typeof(ulong)
                 || type == typeof(short)
                 || type == typeof(ushort)
+                || type == typeof(byte)
+                || type == typeof(sbyte)
                 )
             {
                 return true;
