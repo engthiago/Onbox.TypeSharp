@@ -1,15 +1,13 @@
 # Onbox.TypeSharp ![.NET](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master) ![Publish Release / Package](https://github.com/engthiago/Onbox.TypeSharp/workflows/Publish%20Release%20/%20Package/badge.svg?branch=master)
-Commandline app to convert CSharp data models into Typescript:
+Commandline app to convert CSharp data models into Typescript. It loads and converts the models in runtime, which allows for multi-platform integration and usage on CI/CD pipelines.
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
-## Instalation via Nuget
-1. Install via Visual Studio Package Manager or Open commandline (inside a dotnet project folder) and type:
-```Install-Package Onbox.TypeSharp```
-2. cd into the "packages\Onbox.TypeSharp\{version}\Content" folder
-3. Execute commands against .\TypeSharp.exe as shown on example sections below
-![Example Image](src/Onbox.TypeSharp/location.png)
+## Usage notice
+This package is still on **experimental** phase. It is being used in some internal projects in production but has it has some limitations (this is not an exhaustive list):
+1. Can not load WEB.SDK assemblies (you should have a plain CLR assembly to use it).
+2. Some complex types like Lists of Generic Lists will not work.
 
-## Instalation via Release download
+## Instalation
 1. Go to https://github.com/engthiago/Onbox.TypeSharp/releases and downlaod the latest version
 2. Unzip the contents
 3. cd into the folder 
