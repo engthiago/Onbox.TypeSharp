@@ -22,6 +22,10 @@ namespace SampleModels.Models
         public GenericPerson<SubPerson> Data { get; set; }
         public GenericPerson<Person> Data2 { get; set; }
         public GenericPerson<GenericPerson<Person>> Data3 { get; set; }
+        public List<List<Person>> People { get; set; }
+
+        public List<List<string>> Strings { get; set; }
+        public string[][] Strings2 { get; set; }
         public AccessLevel AccessLevel { get; set; }
     }
 }

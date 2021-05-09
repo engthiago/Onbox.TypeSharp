@@ -21,5 +21,8 @@ export interface Person {
    data: GenericPerson<SubPerson>;
    data2: GenericPerson<Person>;
    data3: GenericPerson<GenericPerson<Person>>;
+   people: Person[][];
+   strings: string[][];
+   strings2: string[][];
    accessLevel: AccessLevel;
 }

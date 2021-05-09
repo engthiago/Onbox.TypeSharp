@@ -79,7 +79,14 @@ namespace Onbox.TypeSharp.Services
             if (this.typeUtils.IsCollection(type))
             {
                 var arg = type.GetElementType();
-                props = arg.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                if (arg == null)
+                {
+                    props = genericTypeUtils.GetGenericType(type).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                } 
+                else
+                {
+                    props = arg.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                }
             }
             else
             {
@@ -130,7 +137,7 @@ namespace Onbox.TypeSharp.Services
                         this.HandlePropertyWritting(type, contextPropType);
                     }
 
-                    if (contextPropType != type)
+                    if (contextPropType != type && contextPropType.Name != "List`1")
                     {
                         var importStatement = $"import {{ {this.typeNamingService.GetImportName(contextPropType)} }} from \"./{this.typeNamingService.GetImportName(contextPropType)}\";";
                         if (importStatments == string.Empty)
@@ -153,7 +160,7 @@ namespace Onbox.TypeSharp.Services
 
         private void HandlePropertyWritting(Type parentType, Type propType)
         {
-            if (this.propertyUtils.ShouldImport(propType) && propType != parentType && !this.typeCache.Contains(propType))
+            if (this.propertyUtils.ShouldImport(propType) && propType != parentType && !this.typeCache.Contains(propType) && propType.Name != "List`1")
             {
                 var convertedProp = this.Convert(propType);
                 var typeName = this.typeNamingService.GetImportName(propType);

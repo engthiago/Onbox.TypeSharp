@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -85,10 +86,16 @@ namespace Onbox.TypeSharp.Services
 
                     var exportsBuilder = new StringBuilder();
                     var sortedTypes = typeCache.GetCachedTypes().Distinct().OrderBy(t => t.Name);
+                    List<string> moduleTypeNames = new List<string>();
                     foreach (var type in sortedTypes)
                     {
+                        if (moduleTypeNames.Contains(type.Name))
+                        {
+                            continue;
+                        }
                         var exportType = $"export {{ {this.typeNamingService.GetImportName(type)} }} from \"./{this.typeNamingService.GetImportName(type)}\";";
                         exportsBuilder.AppendLine(exportType);
+                        moduleTypeNames.Add(type.Name);
                     }
 
                     File.WriteAllText(filePath, exportsBuilder.ToString());
