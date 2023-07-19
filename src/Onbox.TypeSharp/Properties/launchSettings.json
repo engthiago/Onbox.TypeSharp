@@ -2,7 +2,8 @@
   "profiles": {
     "Onbox.TypeSharp": {
       "commandName": "Project",
-      "commandLineArgs": "--source \"C:\\Users\\Thiago\\source\\repos\\engthiago\\Onbox.TypeSharp\\samples\\SampleModels\\bin\\Debug\\netstandard2.0\" --file-filter \"SampleModels.dll\" --destination \"C:\\Users\\Thiago\\source\\repos\\engthiago\\Onbox.TypeSharp\\samples\\SampleModels\\Typescript\" --export-module"
+      "commandLineArgs": "--source \"samples\\SampleModels\\bin\\Debug\\netstandard2.0\" --file-filter \"SampleModels.dll\" --destination \"samples\\SampleModels\\Typescript\" --export-module",
+      "workingDirectory": "C:\\Users\\thy-a\\source\\repos\\Onbox.TypeSharp"
     }
   }
 }

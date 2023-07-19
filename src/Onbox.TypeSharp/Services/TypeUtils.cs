@@ -88,5 +88,16 @@ namespace Onbox.TypeSharp.Services
 
             return false;
         }
+
+        internal bool IsUnion(Type type)
+        {
+            var unionAttribute = type.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("TypeUnion"));
+            if (unionAttribute != null)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

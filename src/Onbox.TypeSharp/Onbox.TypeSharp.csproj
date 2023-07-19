@@ -26,6 +26,7 @@
     <PublishReadyToRun>true</PublishReadyToRun>
     <PackageProjectUrl>https://github.com/engthiago/Onbox.TypeSharp</PackageProjectUrl>
     <PackageTags>Typescript, C#, CSharp, DataModel</PackageTags>
+    <StartupObject>Onbox.TypeSharp.Program</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>

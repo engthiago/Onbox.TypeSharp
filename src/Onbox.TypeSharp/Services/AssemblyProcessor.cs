@@ -71,6 +71,11 @@ namespace Onbox.TypeSharp.Services
                         continue;
                     }
 
+                    if (type.Name.EndsWith("Attribute"))
+                    {
+                        continue;
+                    }
+
                     var result = this.typeConverter.Convert(type);
                     var typeName = this.typeNamingService.GetImportName(type);
                     var filePath = Path.Combine(outputFolder, typeName + ".ts");

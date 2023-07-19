@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -150,7 +152,44 @@ namespace Onbox.TypeSharp.Services
                         }
                     }
                 }
-                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
+
+                var typeUnionAtt = prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("TypeUnion"));
+                var typeUnitSuccess = false;
+                if (typeUnionAtt != null) 
+                { 
+                    var constructorArgs = typeUnionAtt.ConstructorArguments;
+                    if (constructorArgs != null && constructorArgs.Count > 0)
+                    {
+                        var value = constructorArgs[0].Value;
+                        var list = value as IList;
+                        if (list != null && list.Count > 0)
+                        {
+                            var unionTypes = new List<string>();
+                            foreach (var item in list)
+                            {
+                                var argType = item.GetType().GetProperties()[0].PropertyType;
+                                if (argType == null) continue;
+
+                                if (!typeUtils.IsPrimitiveType(argType))
+                                {
+                                    throw new Exception("Non primitive Type Unions not implemented yet");
+                                }
+                                else
+                                {
+                                    unionTypes.Add(item.ToString());
+                                }
+                            }
+
+                            classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {string.Join(" | ", unionTypes)};");
+                            typeUnitSuccess = true;
+                        }
+                    }
+                }
+                
+                if (!typeUnitSuccess)
+                {
+                    classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
+                }
             }
             classBodyBuilder.AppendLine("}");
 

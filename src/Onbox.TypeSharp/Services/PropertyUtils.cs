@@ -15,6 +15,11 @@ namespace Onbox.TypeSharp.Services
 
         public bool ShouldImport(Type type)
         {
+            if (type == typeof(object))
+            {
+                return false;
+            }
+
             if (type.IsEnum)
             {
                 return true;

@@ -25,4 +25,5 @@ export interface Person {
    strings: string[][];
    strings2: string[][];
    accessLevel: AccessLevel;
+   typeUnions: "type1" | "type2";
 }

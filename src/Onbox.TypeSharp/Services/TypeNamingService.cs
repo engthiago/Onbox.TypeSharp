@@ -56,6 +56,11 @@ namespace Onbox.TypeSharp.Services
 
         public string GetPropertyTypeName(Type type)
         {
+            if (this.typeUtils.IsUnion(type))
+            {
+                System.Diagnostics.Debug.WriteLine(type.FullName);
+            }
+
             if (this.typeUtils.IsString(type))
             {
                 return "string";
