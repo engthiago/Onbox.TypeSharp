@@ -27,5 +27,8 @@ namespace SampleModels.Models
         public List<List<string>> Strings { get; set; }
         public string[][] Strings2 { get; set; }
         public AccessLevel AccessLevel { get; set; }
+
+        [TypeUnion("type1", "type2")]
+        public string TypeUnions { get; set; }
     }
 }
