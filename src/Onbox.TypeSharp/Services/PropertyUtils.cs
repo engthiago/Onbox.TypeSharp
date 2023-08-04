@@ -20,6 +20,26 @@ namespace Onbox.TypeSharp.Services
                 return false;
             }
 
+            if (type == typeof(MarshalByRefObject))
+            {
+                return false;
+            }
+
+            if (type.IsAbstract)
+            {
+                return false;
+            }
+
+            if (type == typeof(Attribute))
+            {
+                return false;
+            }
+
+            if (type.IsAssignableTo(typeof(Attribute)))
+            {
+                return false;
+            }
+
             if (type.IsEnum)
             {
                 return true;

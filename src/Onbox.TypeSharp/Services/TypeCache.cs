@@ -7,8 +7,15 @@ namespace Onbox.TypeSharp.Services
     {
         private static readonly HashSet<Type> processedTypes = new HashSet<Type>();
 
+        public TypeCache()
+        {
+            processedTypes.Add(typeof(object));
+        }
+
         public bool Contains(Type type)
         {
+            if (type.IsAssignableFrom(typeof(Attribute))) return true;
+
             return processedTypes.Contains(type);
         }
 
