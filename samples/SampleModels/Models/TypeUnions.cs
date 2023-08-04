@@ -5,6 +5,6 @@ namespace SampleModels.Models
     public class TypeUnionAttribute: Attribute
     {
         public TypeUnionAttribute(params string[] args) { }
-        public TypeUnionAttribute(params Type[] args) { }
+        public TypeUnionAttribute(params double[] args) { }
     }
 }

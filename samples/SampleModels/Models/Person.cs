@@ -7,6 +7,9 @@ namespace SampleModels.Models
         public string Name { get; set; }
         public string Company { get; set; }
         public string Company4 { get; set; }
+
+        [Optional]
+        public string Company5 { get; set; }
         public int? Money { get; set; }
         public SubPerson Related { get; set; }
         public SubPerson Related2 { get; set; }
@@ -30,5 +33,8 @@ namespace SampleModels.Models
 
         [TypeUnion("type1", "type2")]
         public string TypeUnions { get; set; }
+
+        [TypeUnion(1.2, 2.2)]
+        public double TypeUnionDouble { get; set; }
     }
 }

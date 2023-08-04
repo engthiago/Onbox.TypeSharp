@@ -6,6 +6,7 @@ export interface Person {
    name: string;
    company: string;
    company4: string;
+   company5?: string;
    money?: number;
    related: SubPerson;
    related2: SubPerson;
@@ -26,4 +27,5 @@ export interface Person {
    strings2: string[][];
    accessLevel: AccessLevel;
    typeUnions: "type1" | "type2";
+   typeUnionDouble: 1.2 | 2.2;
 }

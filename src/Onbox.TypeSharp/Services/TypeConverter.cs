@@ -176,25 +176,60 @@ namespace Onbox.TypeSharp.Services
                                 }
                                 else
                                 {
-                                    unionTypes.Add(item.ToString());
+                                    var itemObjectString = item.ToString();
+                                    var indexOfParenthesis = itemObjectString.IndexOf(')');
+                                    if (indexOfParenthesis != -1)
+                                    {
+
+                                        itemObjectString = itemObjectString.Remove(0, indexOfParenthesis + 1);
+                                    }
+
+                                    if (string.IsNullOrEmpty(itemObjectString)) continue;
+
+                                    unionTypes.Add(itemObjectString);
                                 }
                             }
 
-                            classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {string.Join(" | ", unionTypes)};");
-                            typeUnitSuccess = true;
+                            if (unionTypes.Count > 0)
+                            {
+                                classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {string.Join(" | ", unionTypes)};");
+                                typeUnitSuccess = true;
+                            }
                         }
                     }
                 }
                 
                 if (!typeUnitSuccess)
                 {
-                    classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)};");
+                    var nullableType = "";
+                    if (ContainsNullableAttr(prop))
+                    {
+                        nullableType = " | null";
+                    }
+                    var optionalType = "";
+                    if (ContainsOptionalAttr(prop))
+                    {
+                        optionalType = "?";
+                    }
+                    classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}{optionalType}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)}{nullableType};");
                 }
             }
             classBodyBuilder.AppendLine("}");
 
             var result = importStatments.Any() ? importStatments + Environment.NewLine + classBodyBuilder.ToString() : classBodyBuilder.ToString();
             return result;
+        }
+
+        private bool ContainsNullableAttr(PropertyInfo prop)
+        {
+            if (prop == null) return false;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("Nullable")) != null;
+        }
+
+        private bool ContainsOptionalAttr(PropertyInfo prop)
+        {
+            if (prop == null) return false;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("Optional")) != null;
         }
 
         private void HandlePropertyWritting(Type parentType, Type propType)
