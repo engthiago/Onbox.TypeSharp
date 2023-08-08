@@ -28,4 +28,5 @@ export interface Person {
    accessLevel: AccessLevel;
    typeUnions: "type1" | "type2";
    typeUnionDouble: 1.2 | 2.2;
+   shouldBeAny: any;
 }

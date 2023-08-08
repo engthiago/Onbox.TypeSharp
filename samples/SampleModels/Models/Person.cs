@@ -36,5 +36,7 @@ namespace SampleModels.Models
 
         [TypeUnion(1.2, 2.2)]
         public double TypeUnionDouble { get; set; }
+
+        public object ShouldBeAny { get; set; }
     }
 }
