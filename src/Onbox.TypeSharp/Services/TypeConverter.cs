@@ -216,8 +216,6 @@ namespace Onbox.TypeSharp.Services
                     var propType = this.typeNamingService.GetPropertyTypeName(prop.PropertyType);
                     if (ContainsUnknownObjectAttr(prop))
                     {
-                        nullableType = "";
-                        optionalType = "";
                         propType = "unknown";
                     }
 
