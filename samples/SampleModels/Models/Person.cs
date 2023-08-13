@@ -40,6 +40,7 @@ namespace SampleModels.Models
         public object ShouldBeAny { get; set; }
 
         [UnknownObject]
+        [Optional]
         public object ShouldBeUnknown { get; set; }
     }
 }
