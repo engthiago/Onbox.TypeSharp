@@ -38,5 +38,8 @@ namespace SampleModels.Models
         public double TypeUnionDouble { get; set; }
 
         public object ShouldBeAny { get; set; }
+
+        [UnknownObject]
+        public object ShouldBeUnknown { get; set; }
     }
 }

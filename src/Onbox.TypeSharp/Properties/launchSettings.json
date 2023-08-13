@@ -3,7 +3,7 @@
     "Onbox.TypeSharp": {
       "commandName": "Project",
       "commandLineArgs": "--source \"samples\\SampleModels\\bin\\Debug\\netstandard2.0\" --file-filter \"SampleModels.dll\" --destination \"samples\\SampleModels\\Typescript\" --export-module",
-      "workingDirectory": "C:\\Users\\thy-a\\source\\repos\\Onbox.TypeSharp"
+      "workingDirectory": "$(SolutionDir)"
     }
   }
 }

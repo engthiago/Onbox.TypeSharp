@@ -29,4 +29,5 @@ export interface Person {
    typeUnions: "type1" | "type2";
    typeUnionDouble: 1.2 | 2.2;
    shouldBeAny: any;
+   shouldBeUnknown: unknown;
 }

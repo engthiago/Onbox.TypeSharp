@@ -211,7 +211,17 @@ namespace Onbox.TypeSharp.Services
                     {
                         optionalType = "?";
                     }
-                    classBodyBuilder.AppendLine($"   {this.typeNamingService.GetPropertyName(prop, contextPropType)}{optionalType}: {this.typeNamingService.GetPropertyTypeName(prop.PropertyType)}{nullableType};");
+        
+                    var propName = this.typeNamingService.GetPropertyName(prop, contextPropType);
+                    var propType = this.typeNamingService.GetPropertyTypeName(prop.PropertyType);
+                    if (ContainsUnknownObjectAttr(prop))
+                    {
+                        nullableType = "";
+                        optionalType = "";
+                        propType = "unknown";
+                    }
+
+                    classBodyBuilder.AppendLine($"   {propName}{optionalType}: {propType}{nullableType};");
                 }
             }
             classBodyBuilder.AppendLine("}");
@@ -223,13 +233,19 @@ namespace Onbox.TypeSharp.Services
         private bool ContainsNullableAttr(PropertyInfo prop)
         {
             if (prop == null) return false;
-            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("Nullable")) != null;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Equals("NullableAttribute")) != null;
         }
 
         private bool ContainsOptionalAttr(PropertyInfo prop)
         {
             if (prop == null) return false;
-            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("Optional")) != null;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Equals("OptionalAttribute")) != null;
+        }
+
+        private bool ContainsUnknownObjectAttr(PropertyInfo prop)
+        {
+            if (prop == null) return false;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Equals("UnknownObjectAttribute")) != null;
         }
 
         private void HandlePropertyWritting(Type parentType, Type propType)
