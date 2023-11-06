@@ -30,4 +30,5 @@ export interface Person {
    typeUnionDouble: 1.2 | 2.2;
    shouldBeAny: any;
    shouldBeUnknown?: unknown;
+   pairs?: Map<string, unknown>;
 }

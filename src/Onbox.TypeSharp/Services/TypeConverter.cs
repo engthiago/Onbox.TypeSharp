@@ -116,6 +116,7 @@ namespace Onbox.TypeSharp.Services
             foreach (var prop in props)
             {
                 var contextPropType = prop.PropertyType;
+
                 if (this.propertyUtils.ShouldImport(contextPropType) && contextPropType != type)
                 {
                     // Collection needs to be checked for its generic item type
@@ -223,6 +224,8 @@ namespace Onbox.TypeSharp.Services
                 }
             }
             classBodyBuilder.AppendLine("}");
+
+            importStatments = string.Join("\n", importStatments.Split("\n").Where(l => l.StartsWith("export { Object } from \"./Object\"") == false).Distinct());
 
             var result = importStatments.Any() ? importStatments + Environment.NewLine + classBodyBuilder.ToString() : classBodyBuilder.ToString();
             return result;

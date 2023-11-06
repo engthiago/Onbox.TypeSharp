@@ -99,5 +99,23 @@ namespace Onbox.TypeSharp.Services
 
             return false;
         }
+
+        internal bool IsCustomPropObjects(Type type)
+        {
+            var startsWithLongFormat = type.FullName?.StartsWith("System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib");
+            var includesObjectFormat = type.FullName?.Contains("[System.Object");
+            if (startsWithLongFormat == true && includesObjectFormat == true)
+            {
+                return true;
+            }
+
+            var startsWithSimpleFormat = type.FullName?.StartsWith("System.Collections.Generic.Dictionary`2[System.String,System.Object]");
+            if (startsWithSimpleFormat == true)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

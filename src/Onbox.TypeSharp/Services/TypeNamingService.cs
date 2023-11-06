@@ -84,6 +84,14 @@ namespace Onbox.TypeSharp.Services
             {
                 return "CustomEvent";
             }
+            else if (this.typeUtils.IsCustomPropObjects(type))
+            {
+                return "Map<string, unknown>";
+            }
+            //else if (this.typeUtils.IsDictionary(type))
+            //{
+                // Implement Dictionaries in the future
+            //}
             else if (this.typeUtils.IsCollection(type))
             {
                 var arg = this.genericTypeUtils.GetGenericType(type);
