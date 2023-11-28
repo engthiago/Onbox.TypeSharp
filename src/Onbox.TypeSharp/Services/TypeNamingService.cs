@@ -86,7 +86,7 @@ namespace Onbox.TypeSharp.Services
             }
             else if (this.typeUtils.IsCustomPropObjects(type))
             {
-                return "Map<string, unknown>";
+                return "{ [key: string]: unknown }";
             }
             //else if (this.typeUtils.IsDictionary(type))
             //{
