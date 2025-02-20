@@ -100,6 +100,16 @@ namespace Onbox.TypeSharp.Services
             return false;
         }
 
+        internal bool IsDictionary(Type type) {
+            var startsWithDictionary = type.FullName?.StartsWith("System.Collections.Generic.Dictionary");
+            if (startsWithDictionary == true)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         internal bool IsCustomPropObjects(Type type)
         {
             var startsWithLongFormat = type.FullName?.StartsWith("System.Collections.Generic.Dictionary`2[[System.String, System.Private.CoreLib");
