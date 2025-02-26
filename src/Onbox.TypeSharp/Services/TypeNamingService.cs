@@ -84,14 +84,22 @@ namespace Onbox.TypeSharp.Services
             {
                 return "CustomEvent";
             }
+            else if (this.typeUtils.IsDictionary(type))
+            {
+                var arguments = type.GetGenericArguments();
+                var keyType = arguments[0];
+                string keyTypeName = this.GetPropertyTypeName(keyType);
+    
+                var valueType = arguments[1];
+                string valueTypeName = this.GetPropertyTypeName(valueType);
+
+                string dictionaryTypeName = "{ [key: " + keyTypeName + "]: " + valueTypeName + " }";
+                return dictionaryTypeName;
+            }
             else if (this.typeUtils.IsCustomPropObjects(type))
             {
                 return "{ [key: string]: unknown }";
             }
-            //else if (this.typeUtils.IsDictionary(type))
-            //{
-                // Implement Dictionaries in the future
-            //}
             else if (this.typeUtils.IsCollection(type))
             {
                 var arg = this.genericTypeUtils.GetGenericType(type);
