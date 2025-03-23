@@ -31,4 +31,5 @@ export interface Person {
    shouldBeAny: any;
    shouldBeUnknown?: unknown;
    pairs?: { [key: string]: any };
+   subpersonPairs?: { [key: string]: SubPerson };
 }

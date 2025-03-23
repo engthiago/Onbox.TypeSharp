@@ -44,5 +44,6 @@ namespace SampleModels.Models
         public object ShouldBeUnknown { get; set; }
 
         [Optional] public Dictionary<string, object> Pairs { get; set; }
+        [Optional] public Dictionary<string, SubPerson> SubpersonPairs { get; set; }
     }
 }
