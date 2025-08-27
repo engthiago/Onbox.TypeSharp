@@ -98,7 +98,7 @@ namespace Onbox.TypeSharp.Services
                         {
                             continue;
                         }
-                        var exportType = $"export {{ {this.typeNamingService.GetImportName(type)} }} from \"./{this.typeNamingService.GetImportName(type)}\";";
+                        var exportType = $"export * from \"./{this.typeNamingService.GetImportName(type)}\";";
                         exportsBuilder.AppendLine(exportType);
                         moduleTypeNames.Add(type.Name);
                     }
