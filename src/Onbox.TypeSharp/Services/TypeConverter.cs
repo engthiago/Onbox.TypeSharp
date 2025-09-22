@@ -199,7 +199,7 @@ namespace Onbox.TypeSharp.Services
                         }
                     }
                 }
-                
+
                 if (!typeUnitSuccess)
                 {
                     var nullableType = "";
@@ -218,6 +218,11 @@ namespace Onbox.TypeSharp.Services
                     if (ContainsUnknownObjectAttr(prop))
                     {
                         propType = "unknown";
+                    }
+
+                    if (ContainsPartialAttr(prop))
+                    {
+                        propType = $"Partial<{propType}>";
                     }
 
                     classBodyBuilder.AppendLine($"   {propName}{optionalType}: {propType}{nullableType};");
@@ -247,6 +252,12 @@ namespace Onbox.TypeSharp.Services
         {
             if (prop == null) return false;
             return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.Equals("UnknownObjectAttribute")) != null;
+        }
+
+        private bool ContainsPartialAttr(PropertyInfo prop)
+        {
+            if (prop == null) return false;
+            return prop.CustomAttributes.FirstOrDefault(a => a.AttributeType.Name.StartsWith("Partial")) != null;
         }
 
         private void HandlePropertyWritting(Type parentType, Type propType)
