@@ -126,7 +126,6 @@ function resolveConfigPaths(options: ConfigFileOptions, base: string): ConfigFil
 
 function finalizeOptions(options: ConfigFileOptions): CliOptions {
   if (typeof options.source !== "string") throw new Error("Missing required argument --source");
-  if (typeof options.fileFilter !== "string") throw new Error("Missing required argument --file-filter");
   if (typeof options.destination !== "string") throw new Error("Missing required argument --destination");
   if (
     options.dictionaryStyle !== undefined && options.dictionaryStyle !== "index-signature" &&
@@ -139,7 +138,7 @@ function finalizeOptions(options: ConfigFileOptions): CliOptions {
   }
   return {
     source: options.source,
-    fileFilter: options.fileFilter,
+    fileFilter: options.fileFilter ?? "*.cs",
     destination: options.destination,
     typeFilter: options.typeFilter,
     watch: options.watch ?? false,

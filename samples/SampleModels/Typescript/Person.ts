@@ -30,6 +30,6 @@ export interface Person {
    typeUnionDouble: 1.2 | 2.2;
    shouldBeAny: any;
    shouldBeUnknown?: unknown;
-   pairs?: { [key: string]: any };
-   subpersonPairs?: { [key: string]: SubPerson };
+   pairs?: Record<string, any>;
+   subpersonPairs?: Record<string, SubPerson>;
 }

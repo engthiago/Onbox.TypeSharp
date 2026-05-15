@@ -38,8 +38,8 @@ Path to a JSON configuration file. Default: `./typesharp.json` when that file ex
 `-s`, `--source` required unless set in config  
 Folder containing `.cs` files. Subfolders are included.
 
-`-f`, `--file-filter` required unless set in config  
-Glob-style filter for source files, such as `*.cs` or `*Dto.cs`. Default: none.
+`-f`, `--file-filter` optional  
+Glob-style filter for source files, such as `*.cs` or `*Dto.cs`. Default: `*.cs`.
 
 `-t`, `--type-filter` optional  
 Glob-style filter for parsed type names, such as `Person*`. Default: all parsed types.

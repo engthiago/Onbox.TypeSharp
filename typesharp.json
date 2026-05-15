@@ -1,0 +1,12 @@
+{
+  "source": "./samples/SampleModels",
+  "fileFilter": "*.cs",
+  "typeFilter": "*",
+  "destination": "./samples/SampleModels/Typescript",
+  "watch": false,
+  "exportModule": true,
+  "dictionaryStyle": "record",
+  "readonlyProperties": false,
+  "quoteStyle": "double",
+  "semicolons": true
+}

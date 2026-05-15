@@ -245,6 +245,30 @@ Deno.test("loads typesharp.json and lets CLI override file values", async () => 
   }
 });
 
+Deno.test("defaults fileFilter to C# source files", async () => {
+  const temp = await Deno.makeTempDir();
+  try {
+    await Deno.writeTextFile(
+      `${temp}/typesharp.json`,
+      JSON.stringify({
+        source: "models",
+        destination: "generated",
+      }),
+    );
+
+    const options = await resolveOptions([], temp);
+    assertEquals(options, {
+      source: `${temp}/models`,
+      fileFilter: "*.cs",
+      destination: `${temp}/generated`,
+      watch: false,
+      exportModule: false,
+    });
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
+});
+
 Deno.test("fails clearly on unsupported property bodies", async () => {
   await assertRejects(
     () => {

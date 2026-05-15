@@ -1,7 +1,7 @@
 import { Person } from "./Person";
 
 export interface Dictionaries {
-   personDictionary: { [key: string]: Person };
-   personDictionaryDouble: { [key: number]: Person };
-   personDictionaryInt: { [key: number]: Person };
+   personDictionary: Record<string, Person>;
+   personDictionaryDouble: Record<number, Person>;
+   personDictionaryInt: Record<number, Person>;
 }
