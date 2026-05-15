@@ -43,7 +43,7 @@ export function generate(files: SourceFileNode[], options: GenerateOptions = {})
     const exports = output
       .map((file) => file.name.replace(/\.ts$/, ""))
       .sort((a, b) => a.localeCompare(b))
-      .map((name) => `export { ${name} } from "./${name}";`)
+      .map((name) => `export * from "./${name}";`)
       .join("\n");
     output.push({ name: `${moduleName}.ts`, text: `${exports}\n` });
   }
