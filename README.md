@@ -1,86 +1,203 @@
-# Onbox.TypeSharp ![.NET](https://github.com/engthiago/Onbox.TypeSharp/workflows/.NET/badge.svg?branch=master) ![Publish Release / Package](https://github.com/engthiago/Onbox.TypeSharp/workflows/Publish%20Release%20/%20Package/badge.svg?branch=master)
-Commandline app to convert CSharp data models into Typescript. It loads and converts the models in runtime, which allows for multi-platform integration and usage on CI/CD pipelines.
+# Onbox.TypeSharp
+
+Convert C# DTO source files into TypeScript interfaces and enums.
+
+TypeSharp is a Deno-powered TypeScript CLI. It reads `.cs` files directly, parses simple DTO models, and writes one `.ts` file per DTO or enum.
+
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
-## Usage notice
-This package is still on **experimental** phase. It is being used in some internal projects in production but has it has some limitations (this is not an exhaustive list):
-1. Can not load WEB.SDK assemblies (you should have a plain CLR assembly to use it).
-2. Some complex types like Lists of Generic Lists will not work.
+## Requirements
 
-## Instalation
-1. Go to https://github.com/engthiago/Onbox.TypeSharp/releases and downlaod the latest version
-2. Unzip the contents
-3. cd into the folder 
-4. Execute commands against .\TypeSharp.exe as shown on example sections below
+- [Deno](https://deno.com/)
 
-## Commmandline options
-``` -s or --source ``` **Required** <br/>
-The full path name of the folder to be converted and/or to be watched. Sub diretories will also be considered. This path is not case sensitive. Relative paths work.
+## Usage
 
-``` -f or --file-filter ``` **Required** <br/>
-Filters the assemblies (just pure assembly names not full name) to be converted. This filter is not case sensitive.
+Run TypeSharp with Deno:
 
-``` -t or --type-filter ``` **Optional** <br/>
-Filters the types (fully qualified names) to be converted. This filter is not case sensitive. Notice that if another model depends on ignored ones, they will still be converted.
-
-``` -d or --destination ``` **Required** <br/>
-The full path name of the folder where the Typescript files will be saved. Relative paths work.
-
-``` -w or --watch ``` **Optional** <br/>
-Tells the app to watch the destination folder and re-run everytime something changes.
-
-``` -m or --export-module ``` **Optional** <br/>
-Creates an exports module file containing all converted models.
-
-## Example 1
-Converts all the types from one assembly and dumps them into a models folder on the desktop:
-```
-.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "SampleModels.dll" --destination "C:\Users\MyUser\Desktop\Models"
+```bash
+deno run --allow-read --allow-write src/typesharp-ts/main.ts \
+  --source "./samples/SampleModels" \
+  --file-filter "*.cs" \
+  --destination "./samples/SampleModels/Typescript" \
+  --export-module
 ```
 
-## Example 2
-Converts all the types from all assemblies in a folder and dump them into a models folder on the desktop:
-```
-.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --destination "C:\Users\MyUser\Desktop\Models"
+Or use a config file:
+
+```bash
+deno run --allow-read --allow-write src/typesharp-ts/main.ts --config "./typesharp.json"
 ```
 
-## Example 3
-Converts only types that contains Web.Models on their fully qualified names from one assembly and dumps them into a models folder on the desktop:
-```
-.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --type-filter "Web.Models" --destination "C:\Users\MyUser\Desktop\Models"
+When `--config` is not provided, TypeSharp reads `typesharp.json` from the current folder if it exists. Command-line options override config file values.
+
+## Command-Line Options
+
+`-c`, `--config` optional  
+Path to a JSON configuration file. Default: `./typesharp.json` when that file exists.
+
+`-s`, `--source` required unless set in config  
+Folder containing `.cs` files. Subfolders are included.
+
+`-f`, `--file-filter` required unless set in config  
+Glob-style filter for source files, such as `*.cs` or `*Dto.cs`. Default: none.
+
+`-t`, `--type-filter` optional  
+Glob-style filter for parsed type names, such as `Person*`. Default: all parsed types.
+
+`-d`, `--destination` required unless set in config  
+Folder where generated TypeScript files are written.
+
+`-w`, `--watch` optional  
+Watches the source folder and regenerates when `.cs` files change. Default: `false`.
+
+`-m`, `--export-module` optional  
+Creates an aggregate module file that re-exports generated files. Default: `false`.
+
+`--dictionary-style` optional  
+Controls dictionary output. Options: `index-signature`, `record`. Default: `index-signature`.
+
+`--readonly-properties` optional  
+Emits all interface properties as `readonly`. Default: `false`.
+
+`--quote-style` optional  
+Controls generated string quotes. Options: `double`, `single`. Default: `double`.
+
+`--semicolons`, `--no-semicolons` optional  
+Controls semicolons on generated TypeScript statements. Options: `true`, `false`. Default: `true`.
+
+## Configuration File
+
+Create `typesharp.json`:
+
+```json
+{
+  "source": "./samples/SampleModels",
+  "fileFilter": "*.cs",
+  "typeFilter": "*",
+  "destination": "./samples/SampleModels/Typescript",
+  "watch": false,
+  "exportModule": true,
+  "dictionaryStyle": "record",
+  "readonlyProperties": false,
+  "quoteStyle": "double",
+  "semicolons": true
+}
 ```
 
-## Example 4
-Watches a assembly so everytime it changes, converts all the types and dumps them into a models folder on the desktop:
-```
-.\TypeSharp.exe --source "C:\repos\Onbox.TypeSharp\samples\SampleModels\bin\Debug\netstandard2.0" --file-filter "*.dll" --type-filter "Web.Models" --destination "C:\Users\MyUser\Desktop\Models" --watch
-```
+Run with the default config path:
 
-## Example 5
-Msbuild Target for running TypeSharp after build. You could add multiple runs of TypeSharp by adding more <Exec> tags:
-```
-<Project>
-  <Target Name="TypeSharp" AfterTargets="CoreBuild">
-    <Exec Command="..\..\typesharp\TypeSharp.exe --source bin\$(Configuration) --file-filter Web.Models.dll --destination ..\angular-app\src\dtos" />
-  </Target>
-</Project>
+```bash
+deno run --allow-read --allow-write src/typesharp-ts/main.ts
 ```
 
-## Advantages
-* Doesn't depend o Visual Studio
-* .Net5 based, so it runs wherever dotnet runs
-* Can be incorporated into MSBuild
-* Can be incorporated into CI pipelines
-* Lightweight
-* Can watch assemblies for changes
+Run with a custom config path:
 
-## Disadvantages
-* Can not load runtime dependencies like Microsoft.AspNetCore.Mvc, so it can not run against ASP.NetCore assemblies
+```bash
+deno run --allow-read --allow-write src/typesharp-ts/main.ts --config "./config/tssharp.json"
+```
 
-## Dev-Dependencies
-* [Onbox.Di](https://www.nuget.org/packages/Onbox.Di)
-* [Onbox.Core](https://www.nuget.org/packages/Onbox.Core)
-* [CommandLineParser](https://www.nuget.org/packages/CommandLineParser)
+Override config values from the command line:
 
-## Runtime Dependencies
-All runtime dependencies are already packaged when installed. Not even .Net5 is needed, since everything is bundled in the exe.
+```bash
+deno run --allow-read --allow-write src/typesharp-ts/main.ts \
+  --config "./config/tssharp.json" \
+  --dictionary-style record \
+  --readonly-properties \
+  --quote-style single \
+  --no-semicolons
+```
+
+## Supported C# Input
+
+TypeSharp supports DTO-focused C# source files:
+
+- `namespace`
+- `public class`
+- generic classes
+- simple inheritance
+- `public enum`
+- attributes
+- public auto-properties
+- primitive types
+- `object`
+- `DateTime` and `DateTimeOffset`
+- nullable shorthand, such as `int?`
+- arrays
+- `List<T>` and other common collection interfaces
+- `Dictionary<TKey, TValue>`
+- nested generics
+- custom DTO and enum references parsed from source
+
+## Supported Attributes
+
+TypeSharp recognizes these attributes on properties:
+
+- `[Optional]` emits an optional TypeScript property.
+- `[Nullable]` adds `| null`.
+- `[UnknownObject]` emits `unknown`.
+- `[Partial]` wraps the property type in `Partial<T>`.
+- `[TypeUnion(...)]` emits literal unions.
+- `[Readonly]` or `[ReadOnly]` emits a readonly property.
+
+TypeSharp also recognizes these attributes on classes:
+
+- `[Readonly]`, `[ReadOnly]`, or `[ReadonlyProperties]` emits all properties on that interface as readonly.
+
+## Examples
+
+C# input:
+
+```csharp
+namespace SampleModels.Models
+{
+    [Readonly]
+    public class Person
+    {
+        public string Name { get; set; }
+        public Dictionary<string, Address> Addresses { get; set; }
+
+        [Optional]
+        [TypeUnion("admin", "user")]
+        public string Role { get; set; }
+    }
+}
+```
+
+Generated TypeScript with `dictionaryStyle` set to `record`:
+
+```ts
+import { Address } from "./Address";
+
+export interface Person {
+   readonly name: string;
+   readonly addresses: Record<string, Address>;
+   readonly role?: "admin" | "user";
+}
+```
+
+Aggregate module output:
+
+```ts
+export * from "./Address";
+export * from "./Person";
+```
+
+## Development
+
+Format:
+
+```bash
+deno fmt src/typesharp-ts
+```
+
+Lint:
+
+```bash
+deno lint src/typesharp-ts
+```
+
+Test:
+
+```bash
+deno test --allow-read --allow-write src/typesharp-ts
+```

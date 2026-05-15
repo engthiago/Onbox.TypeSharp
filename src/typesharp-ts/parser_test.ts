@@ -1,6 +1,6 @@
 import { parseSourceFile } from "./parser.ts";
 import { generate } from "./generator.ts";
-import { convert, parseArgs } from "./main.ts";
+import { convert, parseArgs, resolveOptions } from "./main.ts";
 
 Deno.test("parses classes, attributes, comments, inheritance, and type expressions", () => {
   const file = parseSourceFile(
@@ -65,6 +65,55 @@ namespace Demo {
   assertStringIncludes(person, `pairs: { [key: string]: SubPerson };`);
   assertStringIncludes(person, `strings: string[][];`);
   assertStringIncludes(person, `score: 1.2 | 2.2;`);
+});
+
+Deno.test("supports configured Record dictionaries, readonly properties, quotes, and semicolons", () => {
+  const files = [
+    parseSourceFile(
+      "person.cs",
+      `
+namespace Demo {
+  public class SubPerson { public string Name { get; set; } }
+  [Readonly]
+  public class Person {
+    public Dictionary<string, SubPerson> Pairs { get; set; }
+    [TypeUnion("one", "two")] public string Kind { get; set; }
+  }
+}`,
+    ),
+  ];
+
+  const generated = new Map(
+    generate(files, {
+      dictionaryStyle: "record",
+      quoteStyle: "single",
+      semicolons: false,
+      exportModule: true,
+      moduleName: "Demo.Module",
+    }).map((file) => [file.name, file.text]),
+  );
+  const person = generated.get("Person.ts")!;
+  assertStringIncludes(person, `import { SubPerson } from './SubPerson'`);
+  assertStringIncludes(person, `readonly pairs: Record<string, SubPerson>`);
+  assertStringIncludes(person, `readonly kind: 'one' | 'two'`);
+  assertStringIncludes(generated.get("Demo.Module.ts")!, `export * from './Person'`);
+});
+
+Deno.test("supports property readonly attributes without global readonly", () => {
+  const files = [
+    parseSourceFile(
+      "person.cs",
+      `
+public class Person {
+  [ReadOnly] public string Id { get; set; }
+  public string Name { get; set; }
+}`,
+    ),
+  ];
+
+  const person = generate(files)[0].text;
+  assertStringIncludes(person, `readonly id: string;`);
+  assertStringIncludes(person, `name: string;`);
 });
 
 Deno.test("generates sample outputs for current golden DTOs", async () => {
@@ -133,6 +182,8 @@ function sortValue(value: unknown): unknown {
 Deno.test("supports current CLI arguments", () => {
   assertEquals(
     parseArgs([
+      "--config",
+      "./config/tssharp.json",
       "--source",
       "samples",
       "-f",
@@ -142,16 +193,56 @@ Deno.test("supports current CLI arguments", () => {
       "out",
       "-w",
       "-m",
+      "--dictionary-style",
+      "record",
+      "--readonly-properties",
+      "--quote-style=single",
+      "--no-semicolons",
     ]),
     {
+      configPath: "./config/tssharp.json",
       source: "samples",
       fileFilter: "*.cs",
       typeFilter: "Person*",
       destination: "out",
       watch: true,
       exportModule: true,
+      dictionaryStyle: "record",
+      readonlyProperties: true,
+      quoteStyle: "single",
+      semicolons: false,
     },
   );
+});
+
+Deno.test("loads typesharp.json and lets CLI override file values", async () => {
+  const temp = await Deno.makeTempDir();
+  try {
+    await Deno.writeTextFile(
+      `${temp}/typesharp.json`,
+      JSON.stringify({
+        source: "models",
+        fileFilter: "*.cs",
+        destination: "generated",
+        exportModule: true,
+        dictionaryStyle: "index-signature",
+        readonlyProperties: true,
+      }),
+    );
+
+    const options = await resolveOptions(["--dictionary-style", "record"], temp);
+    assertEquals(options, {
+      source: `${temp}/models`,
+      fileFilter: "*.cs",
+      destination: `${temp}/generated`,
+      watch: false,
+      exportModule: true,
+      dictionaryStyle: "record",
+      readonlyProperties: true,
+    });
+  } finally {
+    await Deno.remove(temp, { recursive: true });
+  }
 });
 
 Deno.test("fails clearly on unsupported property bodies", async () => {

@@ -3,6 +3,10 @@ import type { AttributeNode, ClassNode, SourceFileNode, TypeDeclarationNode, Typ
 export interface GenerateOptions {
   exportModule?: boolean;
   moduleName?: string;
+  dictionaryStyle?: "index-signature" | "record";
+  readonlyProperties?: boolean;
+  quoteStyle?: "double" | "single";
+  semicolons?: boolean;
 }
 
 export interface GeneratedFile {
@@ -31,19 +35,20 @@ const numberTypes = new Set([
 const delegateTypes = new Set(["Action", "Delegate", "Func", "EventHandler"]);
 
 export function generate(files: SourceFileNode[], options: GenerateOptions = {}): GeneratedFile[] {
+  const settings = normalizeOptions(options);
   const declarations = files.flatMap((file) => file.declarations).filter(shouldEmit);
   const typeMap: TypeMap = { declarations: new Map(declarations.map((d) => [d.name, d])) };
   const output = declarations.map((declaration) => ({
     name: `${declaration.name}.ts`,
-    text: declaration.kind === "enum" ? generateEnum(declaration) : generateClass(declaration, typeMap),
+    text: declaration.kind === "enum" ? generateEnum(declaration) : generateClass(declaration, typeMap, settings),
   }));
 
-  if (options.exportModule) {
-    const moduleName = options.moduleName ?? "TypeSharp.Module";
+  if (settings.exportModule) {
+    const moduleName = settings.moduleName ?? "TypeSharp.Module";
     const exports = output
       .map((file) => file.name.replace(/\.ts$/, ""))
       .sort((a, b) => a.localeCompare(b))
-      .map((name) => `export * from "./${name}";`)
+      .map((name) => `export * from ${quote(`./${name}`, settings)}${statementEnd(settings)}`)
       .join("\n");
     output.push({ name: `${moduleName}.ts`, text: `${exports}\n` });
   }
@@ -65,20 +70,25 @@ function generateEnum(node: Extract<TypeDeclarationNode, { kind: "enum" }>): str
   return lines.join("\n");
 }
 
-function generateClass(node: ClassNode, typeMap: TypeMap): string {
+function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<GenerateOptions>): string {
   const imports = collectImports(node, typeMap);
   const lines: string[] = [];
   for (const importName of imports) {
-    lines.push(`import { ${importName} } from "./${importName}";`);
+    lines.push(`import { ${importName} } from ${quote(`./${importName}`, options)}${statementEnd(options)}`);
   }
   lines.push("");
   const typeParams = node.typeParameters.length > 0 ? `<${node.typeParameters.join(", ")}>` : "";
-  const base = node.baseType ? ` extends ${toTypeScriptType(node.baseType, node, typeMap)}` : "";
+  const base = node.baseType ? ` extends ${toTypeScriptType(node.baseType, node, typeMap, options)}` : "";
+  const readonlyClass = options.readonlyProperties || hasAttribute(node.attributes, "Readonly") ||
+    hasAttribute(node.attributes, "ReadOnly") || hasAttribute(node.attributes, "ReadonlyProperties");
   lines.push(`export interface ${node.name}${typeParams}${base} {`);
   for (const prop of node.properties) {
-    const union = typeUnion(prop.attributes);
+    const union = typeUnion(prop.attributes, options);
+    const readonly = readonlyClass || hasAttribute(prop.attributes, "Readonly") ||
+      hasAttribute(prop.attributes, "ReadOnly");
+    const prefix = readonly ? "readonly " : "";
     if (union) {
-      lines.push(`   ${camelCase(prop.name)}: ${union};`);
+      lines.push(`   ${prefix}${camelCase(prop.name)}: ${union}${statementEnd(options)}`);
       continue;
     }
 
@@ -86,9 +96,11 @@ function generateClass(node: ClassNode, typeMap: TypeMap): string {
     const nullable = hasAttribute(prop.attributes, "Nullable") ? " | null" : "";
     let typeName = hasAttribute(prop.attributes, "UnknownObject")
       ? "unknown"
-      : toTypeScriptType(prop.type, node, typeMap);
+      : toTypeScriptType(prop.type, node, typeMap, options);
     if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
-    lines.push(`   ${camelCase(prop.name)}${optional ? "?" : ""}: ${typeName}${nullable};`);
+    lines.push(
+      `   ${prefix}${camelCase(prop.name)}${optional ? "?" : ""}: ${typeName}${nullable}${statementEnd(options)}`,
+    );
   }
   lines.push("}", "");
   return lines.join("\n");
@@ -108,7 +120,12 @@ function collectImports(node: ClassNode, typeMap: TypeMap): string[] {
   return [...imports];
 }
 
-function toTypeScriptType(type: TypeReferenceNode, owner: ClassNode, typeMap: TypeMap): string {
+function toTypeScriptType(
+  type: TypeReferenceNode,
+  owner: ClassNode,
+  typeMap: TypeMap,
+  options: Required<GenerateOptions>,
+): string {
   const base = simpleName(type.name);
   let result: string;
 
@@ -118,13 +135,18 @@ function toTypeScriptType(type: TypeReferenceNode, owner: ClassNode, typeMap: Ty
   else if (numberTypes.has(base) || ["Int32", "Double", "Single", "Decimal"].includes(base)) result = "number";
   else if (base === "DateTime" || base === "DateTimeOffset") result = "Date";
   else if (delegateTypes.has(base)) result = "CustomEvent";
-  else if (base === "Nullable" && type.args.length === 1) result = toTypeScriptType(type.args[0], owner, typeMap);
-  else if (base === "Dictionary" && type.args.length === 2) {
-    result = `{ [key: ${toDictionaryKey(type.args[0])}]: ${toTypeScriptType(type.args[1], owner, typeMap)} }`;
+  else if (base === "Nullable" && type.args.length === 1) {
+    result = toTypeScriptType(type.args[0], owner, typeMap, options);
+  } else if (base === "Dictionary" && type.args.length === 2) {
+    const keyType = toDictionaryKey(type.args[0]);
+    const valueType = toTypeScriptType(type.args[1], owner, typeMap, options);
+    result = options.dictionaryStyle === "record"
+      ? `Record<${keyType}, ${valueType}>`
+      : `{ [key: ${keyType}]: ${valueType} }`;
   } else if (isCollection(base) && type.args.length === 1) {
-    result = `${toTypeScriptType(type.args[0], owner, typeMap)}[]`;
+    result = `${toTypeScriptType(type.args[0], owner, typeMap, options)}[]`;
   } else if (type.args.length > 0) {
-    result = `${base}<${type.args.map((arg) => toTypeScriptType(arg, owner, typeMap)).join(", ")}>`;
+    result = `${base}<${type.args.map((arg) => toTypeScriptType(arg, owner, typeMap, options)).join(", ")}>`;
   } else if (owner.typeParameters.includes(base)) {
     result = base;
   } else if (typeMap.declarations.has(base)) {
@@ -146,10 +168,10 @@ function isCollection(base: string): boolean {
   return ["List", "IList", "ICollection", "IEnumerable", "IReadOnlyList", "IReadOnlyCollection"].includes(base);
 }
 
-function typeUnion(attributes: AttributeNode[]): string | undefined {
+function typeUnion(attributes: AttributeNode[], options: Required<GenerateOptions>): string | undefined {
   const attr = findAttribute(attributes, "TypeUnion");
   if (!attr || attr.args.length === 0) return undefined;
-  return attr.args.map((arg) => arg.kind === "string" ? JSON.stringify(arg.value) : arg.value).join(" | ");
+  return attr.args.map((arg) => arg.kind === "string" ? quote(arg.value, options) : arg.value).join(" | ");
 }
 
 function hasAttribute(attributes: AttributeNode[], name: string): boolean {
@@ -170,4 +192,24 @@ function simpleName(name: string): string {
 function camelCase(value: string): string {
   if (value.length === 0) return value;
   return value[0].toLowerCase() + value.slice(1);
+}
+
+function normalizeOptions(options: GenerateOptions): Required<GenerateOptions> {
+  return {
+    exportModule: options.exportModule ?? false,
+    moduleName: options.moduleName ?? "TypeSharp.Module",
+    dictionaryStyle: options.dictionaryStyle ?? "index-signature",
+    readonlyProperties: options.readonlyProperties ?? false,
+    quoteStyle: options.quoteStyle ?? "double",
+    semicolons: options.semicolons ?? true,
+  };
+}
+
+function quote(value: string, options: Required<GenerateOptions>): string {
+  if (options.quoteStyle === "single") return `'${value.replace(/'/g, "\\'")}'`;
+  return `"${value.replace(/"/g, '\\"')}"`;
+}
+
+function statementEnd(options: Required<GenerateOptions>): string {
+  return options.semicolons ? ";" : "";
 }
