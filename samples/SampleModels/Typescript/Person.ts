@@ -1,4 +1,4 @@
-﻿import { SubPerson } from "./SubPerson";
+import { SubPerson } from "./SubPerson";
 import { GenericPerson } from "./GenericPerson";
 import { AccessLevel } from "./AccessLevel";
 
