@@ -2,12 +2,14 @@
 
 Convert C# DTO source files into TypeScript interfaces and enums.
 
-TypeSharp is a Deno-powered TypeScript CLI. It reads `.cs` files directly, parses simple DTO models, and writes one `.ts` file per DTO or enum.
+TypeSharp is a Node-powered TypeScript CLI. It reads `.cs` files directly, parses simple DTO models, and writes one `.ts` file per DTO or enum.
 
 ![Example Image](src/Onbox.TypeSharp/Example.png)
 
 ## Requirements
 
+- [Node.js](https://nodejs.org/)
+or 
 - [Deno](https://deno.com/)
 
 ## Usage
@@ -15,7 +17,7 @@ TypeSharp is a Deno-powered TypeScript CLI. It reads `.cs` files directly, parse
 Run TypeSharp with Deno:
 
 ```bash
-deno run --allow-read --allow-write src/typesharp-ts/main.ts \
+deno run -A src/main.ts \
   --source "./samples/SampleModels" \
   --file-filter "*.cs" \
   --destination "./samples/SampleModels/Typescript" \
@@ -25,7 +27,19 @@ deno run --allow-read --allow-write src/typesharp-ts/main.ts \
 Or use a config file:
 
 ```bash
-deno run --allow-read --allow-write src/typesharp-ts/main.ts --config "./typesharp.json"
+deno run -A src/main.ts --config "./typesharp.json"
+```
+
+With node (tsx):
+
+```bash
+npx tsx src/main.ts
+```
+
+With node (build the project then run with node)
+
+```bash
+npm run build && node ./dist/main.js
 ```
 
 When `--config` is not provided, TypeSharp reads `typesharp.json` from the current folder if it exists. Command-line options override config file values.
@@ -84,22 +98,11 @@ Create `typesharp.json`:
 }
 ```
 
-Run with the default config path:
-
-```bash
-deno run --allow-read --allow-write src/typesharp-ts/main.ts
-```
-
-Run with a custom config path:
-
-```bash
-deno run --allow-read --allow-write src/typesharp-ts/main.ts --config "./config/tssharp.json"
-```
 
 Override config values from the command line:
 
 ```bash
-deno run --allow-read --allow-write src/typesharp-ts/main.ts \
+deno run -A src/main.ts \
   --config "./config/tssharp.json" \
   --dictionary-style record \
   --readonly-properties \
@@ -184,20 +187,8 @@ export * from "./Person";
 
 ## Development
 
-Format:
-
-```bash
-deno fmt src/typesharp-ts
-```
-
-Lint:
-
-```bash
-deno lint src/typesharp-ts
-```
-
 Test:
 
 ```bash
-deno test --allow-read --allow-write src/typesharp-ts
+npm rum test
 ```

@@ -1,8 +1,8 @@
 {
-  "source": "./samples/SampleModels",
+  "source": "./../../samples/SampleModels",
   "fileFilter": "*.cs",
   "typeFilter": "*",
-  "destination": "./samples/SampleModels/Typescript",
+  "destination": "./../../samples/SampleModels/Typescript",
   "watch": false,
   "exportModule": true,
   "dictionaryStyle": "record",

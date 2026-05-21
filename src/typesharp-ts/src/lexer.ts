@@ -1,4 +1,4 @@
-import type { CommentTrivia } from "./ast.ts";
+import type { CommentTrivia } from "./ast";
 
 export type TokenKind =
   | "identifier"

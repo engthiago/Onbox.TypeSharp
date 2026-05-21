@@ -1,0 +1,27 @@
+{
+  "name": "@onboxdesign/onbox-typesharp",
+  "version": "0.0.4",
+  "description": "Commandline app to convert CSharp data models into Typescript",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "type": "module",
+  "scripts": {
+    "test": "npx vitest --passWithNoTests --reporter=verbose",
+    "build": "node esbuild.mjs"
+  },
+  "author": "Thiago Almeida",
+  "license": "Proprietary",
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "esbuild": "^0.27.3",
+    "tsx": "^4.22.3",
+    "typedoc": "^0.28.17",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "minimatch": "^10.2.3"
+  }
+}

@@ -3,7 +3,7 @@
   ## Summary
 
   Preserve the current .NET implementation and add a new TypeScript implementation under src/typesharp-ts. The new
-  tool will run with deno run, parse simple C# DTO source files, and support the same CLI arguments currently exposed
+  tool will run with Node, parse simple C# DTO source files, and support the same CLI arguments currently exposed
   by TypeSharp.
 
   ## Key Changes
@@ -11,8 +11,8 @@
   - Keep existing C# project untouched:
       - Do not remove or rewrite src/Onbox.TypeSharp.
       - Add the TypeScript implementation as a parallel project in src/typesharp-ts.
-  - Implement a Deno-based CLI:
-      - Entry command should support deno run --allow-read --allow-write src/typesharp-ts/main.ts ....
+  - Implement a Node-based CLI:
+      - Entry command should support npm run typesharp -- ....
       - Support current args: --source/-s, --file-filter/-f, --type-filter/-t, --destination/-d, --watch/-w, and
         --export-module/-m.
       - Interpret --source as a folder containing .cs files.
@@ -44,7 +44,7 @@
 
   ## Test Plan
 
-  - Add Deno tests under src/typesharp-ts.
+  - Add Node tests under src/typesharp-ts.
   - Use samples/SampleModels as golden input and compare generated output with existing samples/SampleModels/
     Typescript.
   - Add focused parser tests for nested generics, arrays, dictionaries, enums, attributes, inheritance, self-
@@ -54,7 +54,7 @@
 
   ## Assumptions
 
-  - The Deno TypeScript implementation is additive and does not replace the current .NET implementation yet.
+  - The TypeScript implementation is additive and does not replace the current .NET implementation yet.
   - The v1 TypeScript tool targets simple .cs DTO source files, not compiled assemblies.
   - Current CLI argument names remain stable, but their source interpretation changes from assemblies to C# source
     files.

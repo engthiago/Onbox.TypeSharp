@@ -1,5 +1,10 @@
-import { parseSourceFile } from "./parser.ts";
-import { generate, type GenerateOptions } from "./generator.ts";
+import { parseSourceFile } from "./parser";
+import { generate, type GenerateOptions } from "./generator";
+import { watch as watchFs } from "node:fs";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 export interface CliOptions extends GenerateOptions {
   source: string;
@@ -18,11 +23,8 @@ export async function run(args: string[]): Promise<void> {
   await convert(options);
   if (options.watch) {
     console.log(`Watching ${options.source}`);
-    const watcher = Deno.watchFs(options.source);
-    for await (const event of watcher) {
-      if (event.paths.some((path) => path.endsWith(".cs"))) {
-        await convert(options);
-      }
+    for await (const path of watchCSharpFiles(options.source)) {
+      if (path.endsWith(".cs")) await convert(options);
     }
   }
 }
@@ -31,7 +33,7 @@ export async function convert(options: CliOptions): Promise<void> {
   const sourceFiles = await findCSharpFiles(options.source, options.fileFilter);
   const parsed = [];
   for (const path of sourceFiles) {
-    parsed.push(parseSourceFile(path, await Deno.readTextFile(path)));
+    parsed.push(parseSourceFile(path, await readFile(path, "utf8")));
   }
   const filtered = options.typeFilter
     ? parsed.map((file) => ({
@@ -39,22 +41,22 @@ export async function convert(options: CliOptions): Promise<void> {
       declarations: file.declarations.filter((declaration) => matchesFilter(declaration.name, options.typeFilter!)),
     }))
     : parsed;
-  const moduleName = basename(normalize(options.source)).replace(/\.[^.]+$/, "") || "TypeSharp.Module";
+  const moduleName = "index";
   const files = generate(filtered, {
     exportModule: options.exportModule,
-    moduleName: `${moduleName}.Module`,
+    moduleName: moduleName,
     dictionaryStyle: options.dictionaryStyle,
     readonlyProperties: options.readonlyProperties,
     quoteStyle: options.quoteStyle,
     semicolons: options.semicolons,
   });
-  await Deno.mkdir(options.destination, { recursive: true });
+  await mkdir(options.destination, { recursive: true });
   for (const file of files) {
-    await Deno.writeTextFile(join(options.destination, file.name), file.text);
+    await writeFile(join(options.destination, file.name), file.text);
   }
 }
 
-export async function resolveOptions(args: string[], cwd = Deno.cwd()): Promise<CliOptions> {
+export async function resolveOptions(args: string[], cwd = process.cwd()): Promise<CliOptions> {
   const cli = parseArgs(args);
   const configPath = cli.configPath ?? join(cwd, "typesharp.json");
   const config = await readConfigFile(configPath, cli.configPath !== undefined);
@@ -104,14 +106,14 @@ export function parseArgs(args: string[]): ParsedCliOptions {
 
 async function readConfigFile(path: string, required: boolean): Promise<ConfigFileOptions> {
   try {
-    const text = await Deno.readTextFile(path);
+    const text = await readFile(path, "utf8");
     const parsed = JSON.parse(text) as unknown;
     if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
       throw new Error(`${path}: config file must contain a JSON object`);
     }
     return parsed as ConfigFileOptions;
   } catch (error) {
-    if (error instanceof Deno.errors.NotFound && !required) return {};
+    if (isNotFoundError(error) && !required) return {};
     throw error;
   }
 }
@@ -199,11 +201,52 @@ async function findCSharpFiles(source: string, filter: string): Promise<string[]
   return files.sort((a, b) => a.localeCompare(b));
 }
 
-async function* walk(root: string): AsyncGenerator<Deno.DirEntry & { path: string }> {
-  for await (const entry of Deno.readDir(root)) {
+async function* walk(root: string): AsyncGenerator<{ isFile: boolean; isDirectory: boolean; path: string }> {
+  for (const entry of await readdir(root, { withFileTypes: true })) {
     const path = join(root, entry.name);
-    if (entry.isDirectory) yield* walk(path);
-    else yield { ...entry, path };
+    if (entry.isDirectory()) yield* walk(path);
+    else yield { isFile: entry.isFile(), isDirectory: entry.isDirectory(), path };
+  }
+}
+
+async function* watchCSharpFiles(root: string): AsyncGenerator<string> {
+  const watched = new Set<string>();
+  const queue: string[] = [];
+  const waiters: Array<() => void> = [];
+
+  const enqueue = (path: string) => {
+    queue.push(path);
+    waiters.shift()?.();
+  };
+
+  const watchDirectory = async (directory: string): Promise<void> => {
+    if (watched.has(directory)) return;
+    watched.add(directory);
+
+    const watcher = watchFs(directory, (_event, fileName) => {
+      if (fileName) enqueue(join(directory, fileName.toString()));
+    });
+    watcher.on("error", () => watcher.close());
+
+    for (const entry of await readdir(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) await watchDirectory(join(directory, entry.name));
+    }
+  };
+
+  await watchDirectory(root);
+  while (true) {
+    if (queue.length === 0) await new Promise<void>((resolve) => waiters.push(resolve));
+    const next = queue.shift();
+    if (!next) continue;
+    try {
+      const childEntries = await readdir(next, { withFileTypes: true });
+      for (const child of childEntries) {
+        if (child.isDirectory()) await watchDirectory(join(next, child.name));
+      }
+    } catch {
+      // The changed path is usually a file, or it may have been deleted before statting.
+    }
+    yield next;
   }
 }
 
@@ -219,36 +262,24 @@ function globToRegExp(glob: string): RegExp {
   return new RegExp(`^${escaped}$`, "i");
 }
 
-function join(...parts: string[]): string {
-  return normalize(parts.join("/"));
-}
-
-function normalize(path: string): string {
+function normalizePath(path: string): string {
   const normalized = path.replace(/\\/g, "/").replace(/\/+/g, "/");
   return normalized === "/" ? normalized : normalized.replace(/\/$/, "");
 }
 
-function basename(path: string): string {
-  return normalize(path).split("/").at(-1) ?? path;
-}
-
-function dirname(path: string): string {
-  const normalized = normalize(path);
-  const parts = normalized.split("/");
-  parts.pop();
-  return parts.join("/") || ".";
-}
-
 function resolvePath(base: string, path: string): string {
-  if (path.startsWith("/") || /^[A-Za-z]:\//.test(path)) return normalize(path);
-  return join(base, path);
+  return normalizePath(isAbsolute(path) ? path : resolve(base, path));
 }
 
-if (import.meta.main) {
+function isNotFoundError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   try {
-    await run(Deno.args);
+    await run(process.argv.slice(2));
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    Deno.exit(1);
+    process.exit(1);
   }
 }

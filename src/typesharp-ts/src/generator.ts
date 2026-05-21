@@ -1,4 +1,4 @@
-import type { AttributeNode, ClassNode, SourceFileNode, TypeDeclarationNode, TypeReferenceNode } from "./ast.ts";
+import { AttributeNode, ClassNode, SourceFileNode, TypeDeclarationNode, TypeReferenceNode } from "./ast";
 
 export interface GenerateOptions {
   exportModule?: boolean;
@@ -44,7 +44,7 @@ export function generate(files: SourceFileNode[], options: GenerateOptions = {})
   }));
 
   if (settings.exportModule) {
-    const moduleName = settings.moduleName ?? "TypeSharp.Module";
+    const moduleName = settings.moduleName ?? "index";
     const exports = output
       .map((file) => file.name.replace(/\.ts$/, ""))
       .sort((a, b) => a.localeCompare(b))

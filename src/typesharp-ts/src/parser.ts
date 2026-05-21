@@ -10,11 +10,16 @@ import type {
   TypeDeclarationNode,
   TypeReferenceNode,
 } from "./ast.ts";
-import { lex, type Token } from "./lexer.ts";
+import { lex, type Token } from "./lexer";
 
 export class CSharpParseError extends Error {
-  constructor(message: string, readonly path: string, readonly offset: number) {
+  readonly path: string;
+  readonly offset: number;
+
+  constructor(message: string, path: string, offset: number) {
     super(`${path}: ${message} at offset ${offset}`);
+    this.path = path;
+    this.offset = offset;
   }
 }
 
@@ -26,8 +31,13 @@ export function parseSourceFile(path: string, source: string): SourceFileNode {
 
 class Parser {
   private index = 0;
+  private readonly path: string;
+  private readonly tokens: Token[];
 
-  constructor(private readonly path: string, private readonly tokens: Token[]) {}
+  constructor(path: string, tokens: Token[]) {
+    this.path = path;
+    this.tokens = tokens;
+  }
 
   parse(): TypeDeclarationNode[] {
     const declarations: TypeDeclarationNode[] = [];
