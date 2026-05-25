@@ -53,8 +53,10 @@ const delegateTypes = new Set(["Action", "Delegate", "Func", "EventHandler"]);
 
 export function generate(files: SourceFileNode[], options: GenerateOptions = {}): GeneratedFile[] {
   const settings = normalizeOptions(options);
-  const declarations = files.flatMap((file) => file.declarations).filter(shouldEmit);
-  const typeMap: TypeMap = { declarations: new Map(declarations.map((d) => [d.name, d])) };
+  const allDeclarations = files.flatMap((file) => file.declarations);
+  const referencedNames = collectReferencedTypeNames(allDeclarations);
+  const declarations = allDeclarations.filter((declaration) => shouldEmit(declaration, referencedNames));
+  const typeMap: TypeMap = { declarations: new Map(allDeclarations.map((d) => [d.name, d])) };
   const output = declarations.map((declaration) => ({
     name: `${declaration.name}.ts`,
     text: declaration.kind === "enum" ? generateEnum(declaration, settings) : generateClass(declaration, typeMap, settings),
@@ -73,9 +75,25 @@ export function generate(files: SourceFileNode[], options: GenerateOptions = {})
   return output;
 }
 
-function shouldEmit(declaration: TypeDeclarationNode): boolean {
+function shouldEmit(declaration: TypeDeclarationNode, referencedNames: Set<string>): boolean {
   if (declaration.kind === "enum") return true;
-  return !declaration.name.endsWith("Attribute") && declaration.properties.length > 0;
+  return !declaration.name.endsWith("Attribute") && (declaration.properties.length > 0 || referencedNames.has(declaration.name));
+}
+
+function collectReferencedTypeNames(declarations: TypeDeclarationNode[]): Set<string> {
+  const names = new Set<string>();
+  const visit = (type: TypeReferenceNode) => {
+    names.add(simpleName(type.name));
+    for (const arg of type.args) visit(arg);
+  };
+
+  for (const declaration of declarations) {
+    if (declaration.kind === "enum") continue;
+    for (const baseType of declaration.baseTypes ?? (declaration.baseType ? [declaration.baseType] : [])) visit(baseType);
+    for (const property of declaration.properties) visit(property.type);
+  }
+
+  return names;
 }
 
 function generateEnum(node: Extract<TypeDeclarationNode, { kind: "enum" }>, options: Required<GenerateOptions>): string {

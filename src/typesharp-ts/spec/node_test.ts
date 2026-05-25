@@ -268,6 +268,42 @@ namespace Shedmate.Designer.Models.Engineering.FEM
   assert.match(generated.get("IOptionalWarning.ts")!, /warning: T;/);
 });
 
+test("emits empty referenced interfaces and imports implemented interfaces", () => {
+  const generated = new Map(generate([
+    parseSourceFile(
+      "entity.cs",
+      `
+using Shedmate.Designer.Models.Sheds.Bim;
+
+public class BIMData
+{
+    public string Name { get; set; }
+}
+
+public interface IGuid
+{
+    string Guid { get; set; }
+}
+
+public class BIMEntity : BIMData, IGuid
+{
+    public string Guid { get; set; }
+    public string ShedId { get; set; }
+}
+`,
+    ),
+  ]).map((file) => [file.name, file.text]));
+
+  assert.match(generated.get("IGuid.ts")!, /export interface IGuid \{/);
+  assert.doesNotMatch(generated.get("IGuid.ts")!, /guid: string;/);
+  const entity = generated.get("BIMEntity.ts")!;
+  assert.match(entity, /import \{ BIMData \} from "\.\/BIMData";/);
+  assert.match(entity, /import \{ IGuid \} from "\.\/IGuid";/);
+  assert.match(entity, /export interface BIMEntity extends BIMData, IGuid \{/);
+  assert.match(entity, /guid: string;/);
+  assert.match(entity, /shedId: string;/);
+});
+
 test("inlines inherited properties when configured", () => {
   const files = [
     parseSourceFile(
