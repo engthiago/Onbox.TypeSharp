@@ -53,6 +53,10 @@ namespace Demo {
     public GenericPerson<GenericPerson<Person>> Data { get; set; }
     public Dictionary<string, SubPerson> Pairs { get; set; }
     public List<List<string>> Strings { get; set; }
+    public HashSet<string> Tags { get; set; }
+    public ISet<SubPerson> UniquePeople { get; set; }
+    public IReadOnlySet<int> Numbers { get; set; }
+    public dynamic Payload { get; set; }
     public AccessLevel AccessLevel { get; set; }
     [TypeUnion(1.2, 2.2)] public double Score { get; set; }
   }
@@ -69,6 +73,10 @@ namespace Demo {
   assert.match(person, /data: GenericPerson<GenericPerson<Person>>;/);
   assert.match(person, /pairs: \{ \[key: string\]: SubPerson \};/);
   assert.match(person, /strings: string\[\]\[\];/);
+  assert.match(person, /tags: string\[\];/);
+  assert.match(person, /uniquePeople: SubPerson\[\];/);
+  assert.match(person, /numbers: number\[\];/);
+  assert.match(person, /payload: any;/);
   assert.match(person, /score: 1\.2 \| 2\.2;/);
 });
 

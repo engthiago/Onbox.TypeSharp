@@ -327,7 +327,7 @@ function toTypeScriptType(
   const base = simpleName(type.name);
   let result: string;
 
-  if (base === "object" || base === "Object") result = "any";
+  if (base === "object" || base === "Object" || base === "dynamic") result = "any";
   else if (base === "string" || base === "char" || base === "String") result = "string";
   else if (base === "bool" || base === "Boolean") result = "boolean";
   else if (numberTypes.has(base) || ["Int32", "Double", "Single", "Decimal"].includes(base)) result = "number";
@@ -363,7 +363,17 @@ function toDictionaryKey(type: TypeReferenceNode): string {
 }
 
 function isCollection(base: string): boolean {
-  return ["List", "IList", "ICollection", "IEnumerable", "IReadOnlyList", "IReadOnlyCollection"].includes(base);
+  return [
+    "List",
+    "IList",
+    "ICollection",
+    "IEnumerable",
+    "IReadOnlyList",
+    "IReadOnlyCollection",
+    "HashSet",
+    "ISet",
+    "IReadOnlySet",
+  ].includes(base);
 }
 
 function typeUnion(attributes: AttributeNode[], options: Required<GenerateOptions>): string | undefined {
