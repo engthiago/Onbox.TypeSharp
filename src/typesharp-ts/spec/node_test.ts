@@ -1,6 +1,6 @@
 import { test } from "vitest";
 import { strict as assert } from "node:assert";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -186,6 +186,7 @@ test("generates sample outputs for current golden DTOs", async () => {
     await convert({
       source: join(root, "samples/SampleModels"),
       fileFilter: "*.cs",
+      excludePatterns: [],
       destination: temp,
       watch: false,
       exportModule: false,
@@ -212,6 +213,9 @@ test("supports current CLI arguments", () => {
       "-f",
       "*.cs",
       "--type-filter=Person*",
+      "--exclude-pattern",
+      "*Attributes.cs",
+      "-x=*Internal.cs",
       "-d",
       "out",
       "-w",
@@ -226,6 +230,7 @@ test("supports current CLI arguments", () => {
       configPath: "./config/tssharp.json",
       source: "samples",
       fileFilter: "*.cs",
+      excludePatterns: ["*Attributes.cs", "*Internal.cs"],
       typeFilter: "Person*",
       destination: "out",
       watch: true,
@@ -246,6 +251,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
       JSON.stringify({
         source: "models",
         fileFilter: "*.cs",
+        excludePatterns: ["*Attributes.cs", "*Internal.cs"],
         destination: "generated",
         exportModule: true,
         dictionaryStyle: "index-signature",
@@ -257,6 +263,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
     assert.deepEqual(options, {
       source: join(temp, "models"),
       fileFilter: "*.cs",
+      excludePatterns: ["*Attributes.cs", "*Internal.cs"],
       destination: join(temp, "generated"),
       typeFilter: undefined,
       watch: false,
@@ -286,6 +293,7 @@ test("defaults fileFilter to C# source files", async () => {
     assert.deepEqual(options, {
       source: join(temp, "models"),
       fileFilter: "*.cs",
+      excludePatterns: [],
       destination: join(temp, "generated"),
       typeFilter: undefined,
       watch: false,
@@ -295,6 +303,38 @@ test("defaults fileFilter to C# source files", async () => {
       quoteStyle: undefined,
       semicolons: undefined,
     });
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
+test("excludes source files by configured patterns", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "typesharp-"));
+  try {
+    const source = join(temp, "models");
+    const destination = join(temp, "generated");
+    await writeFile(join(temp, "typesharp.json"), JSON.stringify({
+      source: "models",
+      destination: "generated",
+      excludePatterns: ["*Attributes.cs", "Internal/*Internal.cs"],
+    }));
+    await mkdir(join(source, "Internal"), { recursive: true });
+    await writeFile(join(source, "Person.cs"), "public class Person { public string Name { get; set; } }");
+    await writeFile(
+      join(source, "OptionalAttributes.cs"),
+      "public class OptionalAttributes { public string Name { get; set; } }",
+    );
+    await writeFile(
+      join(source, "Internal", "HiddenInternal.cs"),
+      "public class HiddenInternal { public string Name { get; set; } }",
+    );
+
+    const options = await resolveOptions([], temp);
+    await convert(options);
+
+    assert.equal(await readFile(join(destination, "Person.ts"), "utf8").then(() => true), true);
+    await assert.rejects(() => readFile(join(destination, "OptionalAttributes.ts"), "utf8"), /ENOENT/);
+    await assert.rejects(() => readFile(join(destination, "HiddenInternal.ts"), "utf8"), /ENOENT/);
   } finally {
     await rm(temp, { recursive: true, force: true });
   }

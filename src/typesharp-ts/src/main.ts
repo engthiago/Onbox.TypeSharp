@@ -9,6 +9,7 @@ import { fileURLToPath } from "node:url";
 export interface CliOptions extends GenerateOptions {
   source: string;
   fileFilter: string;
+  excludePatterns: string[];
   destination: string;
   typeFilter?: string;
   watch: boolean;
@@ -30,7 +31,7 @@ export async function run(args: string[]): Promise<void> {
 }
 
 export async function convert(options: CliOptions): Promise<void> {
-  const sourceFiles = await findCSharpFiles(options.source, options.fileFilter);
+  const sourceFiles = await findCSharpFiles(options.source, options.fileFilter, options.excludePatterns);
   const parsed = [];
   for (const path of sourceFiles) {
     parsed.push(parseSourceFile(path, await readFile(path, "utf8")));
@@ -75,12 +76,14 @@ export function parseArgs(args: string[]): ParsedCliOptions {
     c: "config",
     s: "source",
     f: "file-filter",
+    x: "exclude-pattern",
     t: "type-filter",
     d: "destination",
     w: "watch",
     m: "export-module",
   };
   const booleanFlags = new Set(["watch", "export-module", "readonly-properties", "semicolons"]);
+  const arrayFlags = new Set(["exclude-pattern", "exclude-patterns"]);
 
   for (let i = 0; i < args.length; i++) {
     const raw = args[i];
@@ -94,6 +97,10 @@ export function parseArgs(args: string[]): ParsedCliOptions {
     const name = aliases[flagName] ?? flagName;
     if (booleanFlags.has(name)) {
       values.set(name, inlineValue === undefined ? true : parseBoolean(inlineValue, name));
+    } else if (arrayFlags.has(name)) {
+      const value = inlineValue ?? args[++i];
+      if (!value || value.startsWith("-")) throw new Error(`Missing value for --${name}`);
+      appendListValue(values, "exclude-patterns", value);
     } else {
       const value = inlineValue ?? args[++i];
       if (!value || value.startsWith("-")) throw new Error(`Missing value for --${name}`);
@@ -141,6 +148,7 @@ function finalizeOptions(options: ConfigFileOptions): CliOptions {
   return {
     source: options.source,
     fileFilter: options.fileFilter ?? "*.cs",
+    excludePatterns: normalizeStringList(options.excludePatterns, "excludePatterns"),
     destination: options.destination,
     typeFilter: options.typeFilter,
     watch: options.watch ?? false,
@@ -157,6 +165,7 @@ function mapRawOptions(values: Map<string, string | boolean>): ParsedCliOptions 
   setString(options, "configPath", values.get("config"));
   setString(options, "source", values.get("source"));
   setString(options, "fileFilter", values.get("file-filter"));
+  setStringList(options, "excludePatterns", values.get("exclude-patterns"));
   setString(options, "typeFilter", values.get("type-filter"));
   setString(options, "destination", values.get("destination"));
   setBoolean(options, "watch", values.get("watch"));
@@ -168,12 +177,25 @@ function mapRawOptions(values: Map<string, string | boolean>): ParsedCliOptions 
   return options;
 }
 
+function appendListValue(values: Map<string, string | boolean>, key: string, value: string): void {
+  const existing = values.get(key);
+  values.set(key, [typeof existing === "string" ? existing : "", value].filter(Boolean).join(","));
+}
+
 function setString<T extends Record<string, unknown>>(
   target: T,
   key: keyof T,
   value: string | boolean | undefined,
 ): void {
   if (typeof value === "string") target[key] = value as T[keyof T];
+}
+
+function setStringList<T extends Record<string, unknown>>(
+  target: T,
+  key: keyof T,
+  value: string | boolean | undefined,
+): void {
+  if (typeof value === "string") target[key] = splitList(value) as T[keyof T];
 }
 
 function setBoolean<T extends Record<string, unknown>>(
@@ -184,17 +206,35 @@ function setBoolean<T extends Record<string, unknown>>(
   if (typeof value === "boolean") target[key] = value as T[keyof T];
 }
 
+function normalizeStringList(value: unknown, optionName: string): string[] {
+  if (value === undefined) return [];
+  if (typeof value === "string") return splitList(value);
+  if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
+    return value.map((item) => item.trim()).filter(Boolean);
+  }
+  throw new Error(`${optionName} must be an array of strings`);
+}
+
+function splitList(value: string): string[] {
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
+}
+
 function parseBoolean(value: string, flag: string): boolean {
   if (["true", "1", "yes"].includes(value.toLowerCase())) return true;
   if (["false", "0", "no"].includes(value.toLowerCase())) return false;
   throw new Error(`--${flag} must be true or false`);
 }
 
-async function findCSharpFiles(source: string, filter: string): Promise<string[]> {
+async function findCSharpFiles(source: string, filter: string, excludePatterns: string[] = []): Promise<string[]> {
   const files: string[] = [];
   const matcher = globToRegExp(filter === "*" ? "*.cs" : filter);
+  const excludeMatchers = excludePatterns.map(globToRegExp);
   for await (const entry of walk(source)) {
-    if (entry.isFile && entry.path.endsWith(".cs") && matcher.test(basename(entry.path))) {
+    const relativePath = relativePathFrom(source, entry.path);
+    const excluded = excludeMatchers.some((excludeMatcher) =>
+      excludeMatcher.test(basename(entry.path)) || excludeMatcher.test(relativePath)
+    );
+    if (entry.isFile && entry.path.endsWith(".cs") && matcher.test(basename(entry.path)) && !excluded) {
       files.push(entry.path);
     }
   }
@@ -265,6 +305,12 @@ function globToRegExp(glob: string): RegExp {
 function normalizePath(path: string): string {
   const normalized = path.replace(/\\/g, "/").replace(/\/+/g, "/");
   return normalized === "/" ? normalized : normalized.replace(/\/$/, "");
+}
+
+function relativePathFrom(root: string, path: string): string {
+  const normalizedRoot = `${normalizePath(root)}/`;
+  const normalizedPath = normalizePath(path);
+  return normalizedPath.startsWith(normalizedRoot) ? normalizedPath.slice(normalizedRoot.length) : basename(path);
 }
 
 function resolvePath(base: string, path: string): string {

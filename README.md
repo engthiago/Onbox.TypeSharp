@@ -55,6 +55,9 @@ Folder containing `.cs` files. Subfolders are included.
 `-f`, `--file-filter` optional  
 Glob-style filter for source files, such as `*.cs` or `*Dto.cs`. Default: `*.cs`.
 
+`-x`, `--exclude-pattern` optional  
+Glob-style source file exclude pattern. Can be repeated or passed as a comma-separated list, such as `*Attributes.cs,*Internal.cs`. Patterns are matched against file names and source-relative paths. Default: none.
+
 `-t`, `--type-filter` optional  
 Glob-style filter for parsed type names, such as `Person*`. Default: all parsed types.
 
@@ -87,6 +90,7 @@ Create `typesharp.json`:
 {
   "source": "./samples/SampleModels",
   "fileFilter": "*.cs",
+  "excludePatterns": ["*Attributes.cs", "*Internal.cs"],
   "typeFilter": "*",
   "destination": "./samples/SampleModels/Typescript",
   "watch": false,
