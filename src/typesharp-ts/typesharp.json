@@ -12,5 +12,6 @@
   "semicolons": true,
   "normalizeAcronyms": false,
   "preserveComments": false,
-  "convertDocumentationComments": false
+  "convertDocumentationComments": false,
+  "inlineInheritedProperties": false
 }

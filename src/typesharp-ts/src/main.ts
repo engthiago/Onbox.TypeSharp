@@ -53,6 +53,7 @@ export async function convert(options: CliOptions): Promise<void> {
     normalizeAcronyms: options.normalizeAcronyms,
     preserveComments: options.preserveComments,
     convertDocumentationComments: options.convertDocumentationComments,
+    inlineInheritedProperties: options.inlineInheritedProperties,
   });
   await mkdir(options.destination, { recursive: true });
   for (const file of files) {
@@ -93,6 +94,7 @@ export function parseArgs(args: string[]): ParsedCliOptions {
     "normalize-acronyms",
     "preserve-comments",
     "convert-documentation-comments",
+    "inline-inherited-properties",
   ]);
   const arrayFlags = new Set(["exclude-pattern", "exclude-patterns"]);
 
@@ -171,6 +173,7 @@ function finalizeOptions(options: ConfigFileOptions): CliOptions {
     normalizeAcronyms: options.normalizeAcronyms,
     preserveComments: options.preserveComments,
     convertDocumentationComments: options.convertDocumentationComments,
+    inlineInheritedProperties: options.inlineInheritedProperties,
   };
 }
 
@@ -191,6 +194,7 @@ function mapRawOptions(values: Map<string, string | boolean>): ParsedCliOptions 
   setBoolean(options, "normalizeAcronyms", values.get("normalize-acronyms"));
   setBoolean(options, "preserveComments", values.get("preserve-comments"));
   setBoolean(options, "convertDocumentationComments", values.get("convert-documentation-comments"));
+  setBoolean(options, "inlineInheritedProperties", values.get("inline-inherited-properties"));
   return options;
 }
 

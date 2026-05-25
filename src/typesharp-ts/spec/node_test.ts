@@ -268,6 +268,59 @@ namespace Shedmate.Designer.Models.Engineering.FEM
   assert.match(generated.get("IOptionalWarning.ts")!, /warning: T;/);
 });
 
+test("inlines inherited properties when configured", () => {
+  const files = [
+    parseSourceFile(
+      "instances.cs",
+      `
+namespace Demo {
+  public class Vector3d { public double X { get; set; } }
+  public class WasherInstance { public string Name { get; set; } }
+  public class EntityInstance {
+    public string Guid { get; set; }
+    public string Name { get; set; }
+  }
+  public class BoltInstance : EntityInstance {
+    public Vector3d Normal { get; set; }
+    public double Length { get; set; }
+    public List<WasherInstance> Washers { get; set; }
+  }
+  public class AnchorBoltInstance : BoltInstance {
+    public string JustificationX { get; set; }
+  }
+  public interface IOptionalError<T> {
+    public T Error { get; set; }
+  }
+  public class EngineeringResult : IOptionalError<List<string>> {
+    public bool Done { get; set; }
+  }
+}`,
+    ),
+  ];
+
+  const defaultAnchor = new Map(generate(files).map((file) => [file.name, file.text])).get("AnchorBoltInstance.ts")!;
+  assert.match(defaultAnchor, /justificationX: string;/);
+  assert.doesNotMatch(defaultAnchor, /normal: Vector3d;|guid: string;/);
+
+  const generated = new Map(
+    generate(files, { inlineInheritedProperties: true }).map((file) => [file.name, file.text]),
+  );
+  const anchor = generated.get("AnchorBoltInstance.ts")!;
+  assert.match(anchor, /import \{ BoltInstance \} from "\.\/BoltInstance";/);
+  assert.match(anchor, /import \{ Vector3d \} from "\.\/Vector3d";/);
+  assert.match(anchor, /import \{ WasherInstance \} from "\.\/WasherInstance";/);
+  assert.match(anchor, /justificationX: string;/);
+  assert.match(anchor, /normal: Vector3d;/);
+  assert.match(anchor, /length: number;/);
+  assert.match(anchor, /washers: WasherInstance\[\];/);
+  assert.match(anchor, /guid: string;/);
+  assert.match(anchor, /name: string;/);
+
+  const result = generated.get("EngineeringResult.ts")!;
+  assert.match(result, /done: boolean;/);
+  assert.match(result, /error: string\[\];/);
+});
+
 test("generates sample outputs for current golden DTOs", async () => {
   const temp = await mkdtemp(join(tmpdir(), "typesharp-"));
   try {
@@ -317,6 +370,7 @@ test("supports current CLI arguments", () => {
       "--normalize-acronyms",
       "--preserve-comments",
       "--convert-documentation-comments",
+      "--inline-inherited-properties",
     ]),
     {
       configPath: "./config/tssharp.json",
@@ -334,6 +388,7 @@ test("supports current CLI arguments", () => {
       normalizeAcronyms: true,
       preserveComments: true,
       convertDocumentationComments: true,
+      inlineInheritedProperties: true,
     },
   );
 });
@@ -354,6 +409,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
         normalizeAcronyms: true,
         preserveComments: true,
         convertDocumentationComments: true,
+        inlineInheritedProperties: true,
       }),
     );
 
@@ -373,6 +429,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
       normalizeAcronyms: true,
       preserveComments: true,
       convertDocumentationComments: true,
+      inlineInheritedProperties: true,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });
@@ -406,6 +463,7 @@ test("defaults fileFilter to C# source files", async () => {
       normalizeAcronyms: undefined,
       preserveComments: undefined,
       convertDocumentationComments: undefined,
+      inlineInheritedProperties: undefined,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });

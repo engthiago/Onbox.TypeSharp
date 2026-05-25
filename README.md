@@ -91,6 +91,9 @@ Emits parsed C# comments in generated TypeScript files. Default: `false`.
 `--convert-documentation-comments`, `--no-convert-documentation-comments` optional  
 Converts C# XML documentation comments (`///`) into TypeScript JSDoc comments. Default: `false`.
 
+`--inline-inherited-properties`, `--no-inline-inherited-properties` optional  
+Adds properties from inherited classes and interfaces directly into the generated interface body. Default: `false`.
+
 ## Configuration File
 
 Create `typesharp.json`:
@@ -110,7 +113,8 @@ Create `typesharp.json`:
   "semicolons": true,
   "normalizeAcronyms": false,
   "preserveComments": false,
-  "convertDocumentationComments": false
+  "convertDocumentationComments": false,
+  "inlineInheritedProperties": false
 }
 ```
 

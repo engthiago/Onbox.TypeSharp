@@ -1,4 +1,12 @@
-import { AttributeNode, ClassNode, CommentTrivia, SourceFileNode, TypeDeclarationNode, TypeReferenceNode } from "./ast";
+import {
+  AttributeNode,
+  ClassNode,
+  CommentTrivia,
+  PropertyNode,
+  SourceFileNode,
+  TypeDeclarationNode,
+  TypeReferenceNode,
+} from "./ast";
 
 export interface GenerateOptions {
   exportModule?: boolean;
@@ -10,6 +18,7 @@ export interface GenerateOptions {
   normalizeAcronyms?: boolean;
   preserveComments?: boolean;
   convertDocumentationComments?: boolean;
+  inlineInheritedProperties?: boolean;
 }
 
 export interface GeneratedFile {
@@ -19,6 +28,11 @@ export interface GeneratedFile {
 
 interface TypeMap {
   declarations: Map<string, TypeDeclarationNode>;
+}
+
+interface EmittableProperty {
+  owner: ClassNode;
+  property: PropertyNode;
 }
 
 const numberTypes = new Set([
@@ -77,7 +91,7 @@ function generateEnum(node: Extract<TypeDeclarationNode, { kind: "enum" }>, opti
 }
 
 function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<GenerateOptions>): string {
-  const imports = collectImports(node, typeMap);
+  const imports = collectImports(node, typeMap, options);
   const lines: string[] = [];
   for (const importName of imports) {
     lines.push(`import { ${importName} } from ${quote(`./${importName}`, options)}${statementEnd(options)}`);
@@ -92,35 +106,58 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
     hasAttribute(node.attributes, "ReadOnly") || hasAttribute(node.attributes, "ReadonlyProperties");
   pushComments(lines, node.leadingComments, "", options);
   lines.push(`export interface ${node.name}${typeParams}${base} {`);
+  const emittedNames = new Set<string>();
   for (const prop of node.properties) {
-    pushComments(lines, prop.leadingComments, "   ", options);
-    const union = typeUnion(prop.attributes, options);
-    const readonly = readonlyClass || hasAttribute(prop.attributes, "Readonly") ||
-      hasAttribute(prop.attributes, "ReadOnly");
-    const prefix = readonly ? "readonly " : "";
-    if (union) {
-      lines.push(
-        `   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}${
-          trailingComment(prop.trailingComments, options)
-        }`,
-      );
-      continue;
+    emitProperty(lines, prop, readonlyClass, node, typeMap, options);
+    emittedNames.add(propertyName(prop.name, options));
+  }
+  if (options.inlineInheritedProperties) {
+    for (const inherited of collectInheritedProperties(node, typeMap)) {
+      const name = propertyName(inherited.property.name, options);
+      if (emittedNames.has(name)) continue;
+      const inheritedReadonlyClass = options.readonlyProperties || hasAttribute(inherited.owner.attributes, "Readonly") ||
+        hasAttribute(inherited.owner.attributes, "ReadOnly") || hasAttribute(inherited.owner.attributes, "ReadonlyProperties");
+      emitProperty(lines, inherited.property, inheritedReadonlyClass, node, typeMap, options);
+      emittedNames.add(name);
     }
-
-    const optional = hasAttribute(prop.attributes, "Optional") || prop.type.nullable;
-    const nullable = hasAttribute(prop.attributes, "Nullable") ? " | null" : "";
-    let typeName = hasAttribute(prop.attributes, "UnknownObject")
-      ? "unknown"
-      : toTypeScriptType(prop.type, node, typeMap, options);
-    if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
-    lines.push(
-      `   ${prefix}${propertyName(prop.name, options)}${optional ? "?" : ""}: ${typeName}${nullable}${
-        statementEnd(options)
-      }${trailingComment(prop.trailingComments, options)}`,
-    );
   }
   lines.push("}", "");
   return lines.join("\n");
+}
+
+function emitProperty(
+  lines: string[],
+  prop: PropertyNode,
+  readonlyClass: boolean,
+  typeOwner: ClassNode,
+  typeMap: TypeMap,
+  options: Required<GenerateOptions>,
+): void {
+  pushComments(lines, prop.leadingComments, "   ", options);
+  const union = typeUnion(prop.attributes, options);
+  const readonly = readonlyClass || hasAttribute(prop.attributes, "Readonly") ||
+    hasAttribute(prop.attributes, "ReadOnly");
+  const prefix = readonly ? "readonly " : "";
+  if (union) {
+    lines.push(
+      `   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}${
+        trailingComment(prop.trailingComments, options)
+      }`,
+    );
+    return;
+  }
+
+  const optional = hasAttribute(prop.attributes, "Optional") || prop.type.nullable;
+  const nullable = hasAttribute(prop.attributes, "Nullable") ? " | null" : "";
+  let typeName = hasAttribute(prop.attributes, "UnknownObject")
+    ? "unknown"
+    : toTypeScriptType(prop.type, typeOwner, typeMap, options);
+  if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
+  lines.push(
+    `   ${prefix}${propertyName(prop.name, options)}${optional ? "?" : ""}: ${typeName}${nullable}${
+      statementEnd(options)
+    }${trailingComment(prop.trailingComments, options)}`,
+  );
 }
 
 function pushComments(
@@ -196,7 +233,7 @@ function documentationText(text: string): string {
     .trim();
 }
 
-function collectImports(node: ClassNode, typeMap: TypeMap): string[] {
+function collectImports(node: ClassNode, typeMap: TypeMap, options: Required<GenerateOptions>): string[] {
   const imports = new Set<string>();
   const visit = (type: TypeReferenceNode) => {
     const base = simpleName(type.name);
@@ -207,7 +244,60 @@ function collectImports(node: ClassNode, typeMap: TypeMap): string[] {
   };
   for (const baseType of node.baseTypes ?? (node.baseType ? [node.baseType] : [])) visit(baseType);
   for (const prop of node.properties) visit(prop.type);
+  if (options.inlineInheritedProperties) {
+    for (const inherited of collectInheritedProperties(node, typeMap)) visit(inherited.property.type);
+  }
   return [...imports];
+}
+
+function collectInheritedProperties(node: ClassNode, typeMap: TypeMap): EmittableProperty[] {
+  const properties: EmittableProperty[] = [];
+  const seenTypes = new Set<string>();
+  const visitBase = (baseType: TypeReferenceNode) => {
+    const baseName = simpleName(baseType.name);
+    if (seenTypes.has(baseName)) return;
+    seenTypes.add(baseName);
+
+    const declaration = typeMap.declarations.get(baseName);
+    if (!declaration || declaration.kind !== "class") return;
+
+    const substitutions = new Map<string, TypeReferenceNode>();
+    for (let i = 0; i < declaration.typeParameters.length; i++) {
+      const replacement = baseType.args[i];
+      if (replacement) substitutions.set(declaration.typeParameters[i], replacement);
+    }
+
+    for (const property of declaration.properties) {
+      properties.push({
+        owner: declaration,
+        property: {
+          ...property,
+          type: substituteType(property.type, substitutions),
+        },
+      });
+    }
+    for (const inheritedBaseType of declaration.baseTypes ?? (declaration.baseType ? [declaration.baseType] : [])) {
+      visitBase(substituteType(inheritedBaseType, substitutions));
+    }
+  };
+
+  for (const baseType of node.baseTypes ?? (node.baseType ? [node.baseType] : [])) visitBase(baseType);
+  return properties;
+}
+
+function substituteType(type: TypeReferenceNode, substitutions: Map<string, TypeReferenceNode>): TypeReferenceNode {
+  const replacement = substitutions.get(simpleName(type.name));
+  if (replacement && type.args.length === 0) {
+    return {
+      ...replacement,
+      nullable: replacement.nullable || type.nullable,
+      arrayRank: replacement.arrayRank + type.arrayRank,
+    };
+  }
+  return {
+    ...type,
+    args: type.args.map((arg) => substituteType(arg, substitutions)),
+  };
 }
 
 function toTypeScriptType(
@@ -306,6 +396,7 @@ function normalizeOptions(options: GenerateOptions): Required<GenerateOptions> {
     normalizeAcronyms: options.normalizeAcronyms ?? false,
     preserveComments: options.preserveComments ?? false,
     convertDocumentationComments: options.convertDocumentationComments ?? false,
+    inlineInheritedProperties: options.inlineInheritedProperties ?? false,
   };
 }
 
