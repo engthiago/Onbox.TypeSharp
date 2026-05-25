@@ -141,6 +141,7 @@ TypeSharp supports DTO-focused C# source files:
 - `public enum`
 - attributes
 - public auto-properties
+- private, protected, internal, and implicit interface properties are ignored
 - primitive types
 - `object`
 - `DateTime` and `DateTimeOffset`
