@@ -9,5 +9,5 @@ await esbuild.build({
     platform: 'node',
     format: 'esm',
     entryPoints: [ './src/main.ts' ],
-    outdir: './dist'
+    outfile: './dist/main.mjs'
 });

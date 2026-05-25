@@ -78,7 +78,10 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
   }
   lines.push("");
   const typeParams = node.typeParameters.length > 0 ? `<${node.typeParameters.join(", ")}>` : "";
-  const base = node.baseType ? ` extends ${toTypeScriptType(node.baseType, node, typeMap, options)}` : "";
+  const baseTypes = node.baseTypes ?? (node.baseType ? [node.baseType] : []);
+  const base = baseTypes.length > 0
+    ? ` extends ${baseTypes.map((type) => toTypeScriptType(type, node, typeMap, options)).join(", ")}`
+    : "";
   const readonlyClass = options.readonlyProperties || hasAttribute(node.attributes, "Readonly") ||
     hasAttribute(node.attributes, "ReadOnly") || hasAttribute(node.attributes, "ReadonlyProperties");
   lines.push(`export interface ${node.name}${typeParams}${base} {`);
@@ -115,7 +118,7 @@ function collectImports(node: ClassNode, typeMap: TypeMap): string[] {
     }
     for (const arg of type.args) visit(arg);
   };
-  if (node.baseType) visit(node.baseType);
+  for (const baseType of node.baseTypes ?? (node.baseType ? [node.baseType] : [])) visit(baseType);
   for (const prop of node.properties) visit(prop.type);
   return [...imports];
 }

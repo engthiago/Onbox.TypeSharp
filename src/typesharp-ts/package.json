@@ -2,7 +2,7 @@
   "name": "@onboxdesign/onbox-typesharp",
   "version": "0.0.4",
   "description": "Commandline app to convert CSharp data models into Typescript",
-  "main": "./dist/main.js",
+  "main": "./dist/main.mjs",
   "types": "./dist/main.d.ts",
   "type": "module",
   "scripts": {

@@ -37,6 +37,7 @@ export interface ClassNode {
   namespaceName?: string;
   typeParameters: string[];
   baseType?: TypeReferenceNode;
+  baseTypes?: TypeReferenceNode[];
   properties: PropertyNode[];
   attributes: AttributeNode[];
   leadingComments: CommentTrivia[];

@@ -1,4 +1,4 @@
-import test from "node:test";
+import { test } from "vitest";
 import { strict as assert } from "node:assert";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -72,6 +72,27 @@ namespace Demo {
   assert.match(person, /score: 1\.2 \| 2\.2;/);
 });
 
+test("supports signed enum values", () => {
+  const generated = new Map(generate([
+    parseSourceFile(
+      "status.cs",
+      `
+public enum Status {
+  Invalid = -1,
+  None = 0,
+  Valid = +1,
+  Next
+}`,
+    ),
+  ]).map((file) => [file.name, file.text]));
+
+  const status = generated.get("Status.ts")!;
+  assert.match(status, /Invalid = -1,/);
+  assert.match(status, /None = 0,/);
+  assert.match(status, /Valid = 1,/);
+  assert.match(status, /Next = 2,/);
+});
+
 test("supports configured Record dictionaries, readonly properties, quotes, and semicolons", () => {
   const generated = new Map(generate([
     parseSourceFile(
@@ -116,10 +137,52 @@ public class Person {
   assert.match(person, /name: string;/);
 });
 
+test("supports interfaces and multiple implemented generic interfaces", () => {
+  const generated = new Map(generate([
+    parseSourceFile(
+      "engineering.cs",
+      `
+using System.Collections.Generic;
+
+namespace Shedmate.Designer.Models.Engineering.FEM
+{
+    public class EngineeringResult : IOptionalError<List<string>>, IOptionalWarning<List<string>>
+    {
+        public bool Done { get; set; }
+        public bool Success { get; set ; }
+        public List<string> Error { get; set; }
+        public List<string> Warning { get; set; }
+        public string Critical { get; set; }
+    }
+
+    public interface IOptionalError<T>
+    {
+        public bool Success { get; set; }
+        public T Error { get; set;}
+    }
+
+    public interface IOptionalWarning<T>
+    {
+        public bool Success { get; set; }
+        public T Warning { get; set;}
+    }
+}`,
+    ),
+  ]).map((file) => [file.name, file.text]));
+
+  assert.match(
+    generated.get("EngineeringResult.ts")!,
+    /export interface EngineeringResult extends IOptionalError<string\[\]>, IOptionalWarning<string\[\]> \{/,
+  );
+  assert.match(generated.get("IOptionalError.ts")!, /export interface IOptionalError<T> \{/);
+  assert.match(generated.get("IOptionalError.ts")!, /error: T;/);
+  assert.match(generated.get("IOptionalWarning.ts")!, /warning: T;/);
+});
+
 test("generates sample outputs for current golden DTOs", async () => {
   const temp = await mkdtemp(join(tmpdir(), "typesharp-"));
   try {
-    const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+    const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
     await convert({
       source: join(root, "samples/SampleModels"),
       fileFilter: "*.cs",

@@ -65,7 +65,7 @@ class Parser {
 
       if (
         attributes.length > 0 || this.isText("public") || this.isText("partial") || this.isText("class") ||
-        this.isText("enum")
+        this.isText("interface") || this.isText("enum")
       ) {
         declarations.push(...this.parseDeclaration(undefined, attributes));
         continue;
@@ -83,7 +83,11 @@ class Parser {
     this.matchText("partial");
 
     if (this.matchText("class")) {
-      return [this.parseClass(namespaceName, attributes, leadingComments)];
+      return [this.parseClass(namespaceName, attributes, leadingComments, "class")];
+    }
+
+    if (this.matchText("interface")) {
+      return [this.parseClass(namespaceName, attributes, leadingComments, "interface")];
     }
 
     if (this.matchText("enum")) {
@@ -99,11 +103,11 @@ class Parser {
     namespaceName: string | undefined,
     attributes: AttributeNode[],
     leadingComments: CommentTrivia[],
+    declarationKind: "class" | "interface",
   ): ClassNode {
-    const name = this.expectIdentifier("Expected class name").text;
+    const name = this.expectIdentifier(`Expected ${declarationKind} name`).text;
     const typeParameters = this.parseTypeParameters();
-    let baseType: TypeReferenceNode | undefined;
-    if (this.matchText(":")) baseType = this.parseTypeReference();
+    const baseTypes = this.parseBaseTypes();
     this.expectText("{");
     const properties: PropertyNode[] = [];
 
@@ -115,7 +119,7 @@ class Parser {
         continue;
       }
 
-      if (this.isText("class") || this.isText("enum")) {
+      if (this.isText("class") || this.isText("interface") || this.isText("enum")) {
         this.skipUnsupportedMember("Nested type declarations are not supported");
         continue;
       }
@@ -150,12 +154,20 @@ class Parser {
       name,
       namespaceName,
       typeParameters,
-      baseType,
+      baseType: baseTypes[0],
+      baseTypes,
       properties,
       attributes,
       leadingComments,
       trailingComments: this.previous().trailingComments,
     };
+  }
+
+  private parseBaseTypes(): TypeReferenceNode[] {
+    const baseTypes: TypeReferenceNode[] = [];
+    if (!this.matchText(":")) return baseTypes;
+    do baseTypes.push(this.parseTypeReference()); while (this.matchText(","));
+    return baseTypes;
   }
 
   private parseEnum(
@@ -172,8 +184,7 @@ class Parser {
       const token = this.expectIdentifier("Expected enum member name");
       let value: number | undefined;
       if (this.matchText("=")) {
-        const valueToken = this.expect("number", "Expected enum member numeric value");
-        value = Number(valueToken.text);
+        value = this.parseEnumNumericValue();
         nextImplicitValue = value + 1;
       } else {
         value = nextImplicitValue++;
@@ -196,6 +207,12 @@ class Parser {
       leadingComments,
       trailingComments: this.previous().trailingComments,
     };
+  }
+
+  private parseEnumNumericValue(): number {
+    const sign = this.matchText("-") ? -1 : this.matchText("+") ? 1 : 1;
+    const valueToken = this.expect("number", "Expected enum member numeric value");
+    return sign * Number(valueToken.text);
   }
 
   private parseAttributes(): AttributeNode[] {
