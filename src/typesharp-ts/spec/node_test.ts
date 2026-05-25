@@ -122,6 +122,33 @@ namespace Demo {
   assert.match(generated.get("Demo.Module.ts")!, /export \* from '\.\/Person'/);
 });
 
+test("supports default and acronym-normalized property naming", () => {
+  const files = [
+    parseSourceFile(
+      "report.cs",
+      `
+public class ULSReport {}
+public class Report {
+  public string SubCategory { get; set; }
+  public ULSReport ULS { get; set; }
+  public string URLValue { get; set; }
+}`,
+    ),
+  ];
+
+  const defaultReport = new Map(generate(files).map((file) => [file.name, file.text])).get("Report.ts")!;
+  assert.match(defaultReport, /subCategory: string;/);
+  assert.match(defaultReport, /uLS: ULSReport;/);
+  assert.match(defaultReport, /uRLValue: string;/);
+
+  const normalizedReport = new Map(
+    generate(files, { normalizeAcronyms: true }).map((file) => [file.name, file.text]),
+  ).get("Report.ts")!;
+  assert.match(normalizedReport, /subCategory: string;/);
+  assert.match(normalizedReport, /uls: ULSReport;/);
+  assert.match(normalizedReport, /urlValue: string;/);
+});
+
 test("supports property readonly attributes without global readonly", () => {
   const person = generate([
     parseSourceFile(
@@ -225,6 +252,7 @@ test("supports current CLI arguments", () => {
       "--readonly-properties",
       "--quote-style=single",
       "--no-semicolons",
+      "--normalize-acronyms",
     ]),
     {
       configPath: "./config/tssharp.json",
@@ -239,6 +267,7 @@ test("supports current CLI arguments", () => {
       readonlyProperties: true,
       quoteStyle: "single",
       semicolons: false,
+      normalizeAcronyms: true,
     },
   );
 });
@@ -256,6 +285,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
         exportModule: true,
         dictionaryStyle: "index-signature",
         readonlyProperties: true,
+        normalizeAcronyms: true,
       }),
     );
 
@@ -272,6 +302,7 @@ test("loads typesharp.json and lets CLI override file values", async () => {
       readonlyProperties: true,
       quoteStyle: undefined,
       semicolons: undefined,
+      normalizeAcronyms: true,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });
@@ -302,6 +333,7 @@ test("defaults fileFilter to C# source files", async () => {
       readonlyProperties: undefined,
       quoteStyle: undefined,
       semicolons: undefined,
+      normalizeAcronyms: undefined,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });

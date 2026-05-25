@@ -82,6 +82,9 @@ Controls generated string quotes. Options: `double`, `single`. Default: `double`
 `--semicolons`, `--no-semicolons` optional  
 Controls semicolons on generated TypeScript statements. Options: `true`, `false`. Default: `true`.
 
+`--normalize-acronyms`, `--no-normalize-acronyms` optional  
+Normalizes leading acronyms in generated property names, such as `ULS` to `uls`. Default: `false`.
+
 ## Configuration File
 
 Create `typesharp.json`:
@@ -98,7 +101,8 @@ Create `typesharp.json`:
   "dictionaryStyle": "record",
   "readonlyProperties": false,
   "quoteStyle": "double",
-  "semicolons": true
+  "semicolons": true,
+  "normalizeAcronyms": false
 }
 ```
 

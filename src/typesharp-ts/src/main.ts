@@ -50,6 +50,7 @@ export async function convert(options: CliOptions): Promise<void> {
     readonlyProperties: options.readonlyProperties,
     quoteStyle: options.quoteStyle,
     semicolons: options.semicolons,
+    normalizeAcronyms: options.normalizeAcronyms,
   });
   await mkdir(options.destination, { recursive: true });
   for (const file of files) {
@@ -82,7 +83,13 @@ export function parseArgs(args: string[]): ParsedCliOptions {
     w: "watch",
     m: "export-module",
   };
-  const booleanFlags = new Set(["watch", "export-module", "readonly-properties", "semicolons"]);
+  const booleanFlags = new Set([
+    "watch",
+    "export-module",
+    "readonly-properties",
+    "semicolons",
+    "normalize-acronyms",
+  ]);
   const arrayFlags = new Set(["exclude-pattern", "exclude-patterns"]);
 
   for (let i = 0; i < args.length; i++) {
@@ -157,6 +164,7 @@ function finalizeOptions(options: ConfigFileOptions): CliOptions {
     readonlyProperties: options.readonlyProperties,
     quoteStyle: options.quoteStyle,
     semicolons: options.semicolons,
+    normalizeAcronyms: options.normalizeAcronyms,
   };
 }
 
@@ -174,6 +182,7 @@ function mapRawOptions(values: Map<string, string | boolean>): ParsedCliOptions 
   setBoolean(options, "readonlyProperties", values.get("readonly-properties"));
   setString(options, "quoteStyle", values.get("quote-style"));
   setBoolean(options, "semicolons", values.get("semicolons"));
+  setBoolean(options, "normalizeAcronyms", values.get("normalize-acronyms"));
   return options;
 }
 

@@ -7,6 +7,7 @@ export interface GenerateOptions {
   readonlyProperties?: boolean;
   quoteStyle?: "double" | "single";
   semicolons?: boolean;
+  normalizeAcronyms?: boolean;
 }
 
 export interface GeneratedFile {
@@ -91,7 +92,7 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
       hasAttribute(prop.attributes, "ReadOnly");
     const prefix = readonly ? "readonly " : "";
     if (union) {
-      lines.push(`   ${prefix}${camelCase(prop.name)}: ${union}${statementEnd(options)}`);
+      lines.push(`   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}`);
       continue;
     }
 
@@ -102,7 +103,9 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
       : toTypeScriptType(prop.type, node, typeMap, options);
     if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
     lines.push(
-      `   ${prefix}${camelCase(prop.name)}${optional ? "?" : ""}: ${typeName}${nullable}${statementEnd(options)}`,
+      `   ${prefix}${propertyName(prop.name, options)}${optional ? "?" : ""}: ${typeName}${nullable}${
+        statementEnd(options)
+      }`,
     );
   }
   lines.push("}", "");
@@ -192,9 +195,20 @@ function simpleName(name: string): string {
   return name.split(".").at(-1) ?? name;
 }
 
+function propertyName(value: string, options: Required<GenerateOptions>): string {
+  return options.normalizeAcronyms ? acronymCamelCase(value) : camelCase(value);
+}
+
 function camelCase(value: string): string {
   if (value.length === 0) return value;
   return value[0].toLowerCase() + value.slice(1);
+}
+
+function acronymCamelCase(value: string): string {
+  if (value.length === 0) return value;
+  const leadingAcronym = value.match(/^[A-Z]+(?=$|[A-Z][a-z])/);
+  if (!leadingAcronym) return camelCase(value);
+  return leadingAcronym[0].toLowerCase() + value.slice(leadingAcronym[0].length);
 }
 
 function normalizeOptions(options: GenerateOptions): Required<GenerateOptions> {
@@ -205,6 +219,7 @@ function normalizeOptions(options: GenerateOptions): Required<GenerateOptions> {
     readonlyProperties: options.readonlyProperties ?? false,
     quoteStyle: options.quoteStyle ?? "double",
     semicolons: options.semicolons ?? true,
+    normalizeAcronyms: options.normalizeAcronyms ?? false,
   };
 }
 

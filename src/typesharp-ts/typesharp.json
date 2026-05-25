@@ -9,5 +9,6 @@
   "dictionaryStyle": "record",
   "readonlyProperties": false,
   "quoteStyle": "double",
-  "semicolons": true
+  "semicolons": true,
+  "normalizeAcronyms": false
 }
