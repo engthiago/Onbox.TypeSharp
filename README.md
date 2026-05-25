@@ -85,6 +85,12 @@ Controls semicolons on generated TypeScript statements. Options: `true`, `false`
 `--normalize-acronyms`, `--no-normalize-acronyms` optional  
 Normalizes leading acronyms in generated property names, such as `ULS` to `uls`. Default: `false`.
 
+`--preserve-comments`, `--no-preserve-comments` optional  
+Emits parsed C# comments in generated TypeScript files. Default: `false`.
+
+`--convert-documentation-comments`, `--no-convert-documentation-comments` optional  
+Converts C# XML documentation comments (`///`) into TypeScript JSDoc comments. Default: `false`.
+
 ## Configuration File
 
 Create `typesharp.json`:
@@ -102,7 +108,9 @@ Create `typesharp.json`:
   "readonlyProperties": false,
   "quoteStyle": "double",
   "semicolons": true,
-  "normalizeAcronyms": false
+  "normalizeAcronyms": false,
+  "preserveComments": false,
+  "convertDocumentationComments": false
 }
 ```
 

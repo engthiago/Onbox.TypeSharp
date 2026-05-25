@@ -149,6 +149,68 @@ public class Report {
   assert.match(normalizedReport, /urlValue: string;/);
 });
 
+test("preserves comments only when enabled", () => {
+  const files = [
+    parseSourceFile(
+      "commented.cs",
+      `
+/// <summary>Report docs</summary>
+public class Report {
+  // Property docs
+  public string Name { get; set; } // trailing docs
+  /// <summary>Count docs</summary>
+  /* block docs */
+  public int Count { get; set; }
+}
+
+/// <summary>Status docs</summary>
+public enum Status {
+  // Invalid docs
+  Invalid = -1,
+  /// <summary>Valid docs</summary>
+  Valid = 1,
+}
+`,
+    ),
+  ];
+
+  const defaultGenerated = new Map(generate(files).map((file) => [file.name, file.text]));
+  assert.doesNotMatch(defaultGenerated.get("Report.ts")!, /Report docs|Property docs|trailing docs|block docs|Count docs/);
+  assert.doesNotMatch(defaultGenerated.get("Status.ts")!, /Status docs|Invalid docs|Valid docs/);
+
+  const preserved = new Map(generate(files, { preserveComments: true }).map((file) => [file.name, file.text]));
+  assert.match(preserved.get("Report.ts")!, /\/\/\/ <summary>Report docs<\/summary>\nexport interface Report/);
+  assert.match(preserved.get("Report.ts")!, /   \/\/ Property docs\n   name: string; \/\/ trailing docs/);
+  assert.match(preserved.get("Report.ts")!, /   \/\/\/ <summary>Count docs<\/summary>\n   \/\* block docs \*\/\n   count: number;/);
+  assert.match(preserved.get("Status.ts")!, /\/\/\/ <summary>Status docs<\/summary>\nexport enum Status/);
+  assert.match(preserved.get("Status.ts")!, /   \/\/ Invalid docs\n   Invalid = -1,/);
+  assert.match(preserved.get("Status.ts")!, /   \/\/\/ <summary>Valid docs<\/summary>\n   Valid = 1,/);
+});
+
+test("converts documentation comments without preserving ordinary comments", () => {
+  const files = [
+    parseSourceFile(
+      "commented.cs",
+      `
+/// <summary>Report docs</summary>
+/// <remarks>More details</remarks>
+public class Report {
+  // Ordinary comment
+  /// <summary>Name docs</summary>
+  public string Name { get; set; } // trailing docs
+}
+`,
+    ),
+  ];
+
+  const generated = new Map(
+    generate(files, { convertDocumentationComments: true }).map((file) => [file.name, file.text]),
+  ).get("Report.ts")!;
+  assert.match(generated, /\/\*\*\n \* Report docs\n \*\n \* More details\n \*\/\nexport interface Report/);
+  assert.match(generated, /   \/\*\*\n    \* Name docs\n    \*\/\n   name: string;/);
+  assert.doesNotMatch(generated, /Ordinary comment|trailing docs|\/\/\//);
+});
+
 test("supports property readonly attributes without global readonly", () => {
   const person = generate([
     parseSourceFile(
@@ -253,6 +315,8 @@ test("supports current CLI arguments", () => {
       "--quote-style=single",
       "--no-semicolons",
       "--normalize-acronyms",
+      "--preserve-comments",
+      "--convert-documentation-comments",
     ]),
     {
       configPath: "./config/tssharp.json",
@@ -268,6 +332,8 @@ test("supports current CLI arguments", () => {
       quoteStyle: "single",
       semicolons: false,
       normalizeAcronyms: true,
+      preserveComments: true,
+      convertDocumentationComments: true,
     },
   );
 });
@@ -286,6 +352,8 @@ test("loads typesharp.json and lets CLI override file values", async () => {
         dictionaryStyle: "index-signature",
         readonlyProperties: true,
         normalizeAcronyms: true,
+        preserveComments: true,
+        convertDocumentationComments: true,
       }),
     );
 
@@ -303,6 +371,8 @@ test("loads typesharp.json and lets CLI override file values", async () => {
       quoteStyle: undefined,
       semicolons: undefined,
       normalizeAcronyms: true,
+      preserveComments: true,
+      convertDocumentationComments: true,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });
@@ -334,6 +404,8 @@ test("defaults fileFilter to C# source files", async () => {
       quoteStyle: undefined,
       semicolons: undefined,
       normalizeAcronyms: undefined,
+      preserveComments: undefined,
+      convertDocumentationComments: undefined,
     });
   } finally {
     await rm(temp, { recursive: true, force: true });

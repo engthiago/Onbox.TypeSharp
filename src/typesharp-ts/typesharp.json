@@ -10,5 +10,7 @@
   "readonlyProperties": false,
   "quoteStyle": "double",
   "semicolons": true,
-  "normalizeAcronyms": false
+  "normalizeAcronyms": false,
+  "preserveComments": false,
+  "convertDocumentationComments": false
 }

@@ -1,4 +1,4 @@
-import { AttributeNode, ClassNode, SourceFileNode, TypeDeclarationNode, TypeReferenceNode } from "./ast";
+import { AttributeNode, ClassNode, CommentTrivia, SourceFileNode, TypeDeclarationNode, TypeReferenceNode } from "./ast";
 
 export interface GenerateOptions {
   exportModule?: boolean;
@@ -8,6 +8,8 @@ export interface GenerateOptions {
   quoteStyle?: "double" | "single";
   semicolons?: boolean;
   normalizeAcronyms?: boolean;
+  preserveComments?: boolean;
+  convertDocumentationComments?: boolean;
 }
 
 export interface GeneratedFile {
@@ -41,7 +43,7 @@ export function generate(files: SourceFileNode[], options: GenerateOptions = {})
   const typeMap: TypeMap = { declarations: new Map(declarations.map((d) => [d.name, d])) };
   const output = declarations.map((declaration) => ({
     name: `${declaration.name}.ts`,
-    text: declaration.kind === "enum" ? generateEnum(declaration) : generateClass(declaration, typeMap, settings),
+    text: declaration.kind === "enum" ? generateEnum(declaration, settings) : generateClass(declaration, typeMap, settings),
   }));
 
   if (settings.exportModule) {
@@ -62,10 +64,13 @@ function shouldEmit(declaration: TypeDeclarationNode): boolean {
   return !declaration.name.endsWith("Attribute") && declaration.properties.length > 0;
 }
 
-function generateEnum(node: Extract<TypeDeclarationNode, { kind: "enum" }>): string {
-  const lines = ["", `export enum ${node.name} {`];
+function generateEnum(node: Extract<TypeDeclarationNode, { kind: "enum" }>, options: Required<GenerateOptions>): string {
+  const lines = [""];
+  pushComments(lines, node.leadingComments, "", options);
+  lines.push(`export enum ${node.name} {`);
   for (const member of node.members) {
-    lines.push(`   ${member.name} = ${member.value ?? 0},`);
+    pushComments(lines, member.leadingComments, "   ", options);
+    lines.push(`   ${member.name} = ${member.value ?? 0},${trailingComment(member.trailingComments, options)}`);
   }
   lines.push("}", "");
   return lines.join("\n");
@@ -85,14 +90,20 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
     : "";
   const readonlyClass = options.readonlyProperties || hasAttribute(node.attributes, "Readonly") ||
     hasAttribute(node.attributes, "ReadOnly") || hasAttribute(node.attributes, "ReadonlyProperties");
+  pushComments(lines, node.leadingComments, "", options);
   lines.push(`export interface ${node.name}${typeParams}${base} {`);
   for (const prop of node.properties) {
+    pushComments(lines, prop.leadingComments, "   ", options);
     const union = typeUnion(prop.attributes, options);
     const readonly = readonlyClass || hasAttribute(prop.attributes, "Readonly") ||
       hasAttribute(prop.attributes, "ReadOnly");
     const prefix = readonly ? "readonly " : "";
     if (union) {
-      lines.push(`   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}`);
+      lines.push(
+        `   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}${
+          trailingComment(prop.trailingComments, options)
+        }`,
+      );
       continue;
     }
 
@@ -105,11 +116,84 @@ function generateClass(node: ClassNode, typeMap: TypeMap, options: Required<Gene
     lines.push(
       `   ${prefix}${propertyName(prop.name, options)}${optional ? "?" : ""}: ${typeName}${nullable}${
         statementEnd(options)
-      }`,
+      }${trailingComment(prop.trailingComments, options)}`,
     );
   }
   lines.push("}", "");
   return lines.join("\n");
+}
+
+function pushComments(
+  lines: string[],
+  comments: CommentTrivia[],
+  indent: string,
+  options: Required<GenerateOptions>,
+): void {
+  let docComments: CommentTrivia[] = [];
+  const flushDocComments = () => {
+    if (docComments.length === 0) return;
+    if (options.convertDocumentationComments) {
+      pushDocumentationComment(lines, docComments, indent);
+    } else if (options.preserveComments) {
+      for (const comment of docComments) lines.push(`${indent}${comment.text.trim()}`);
+    }
+    docComments = [];
+  };
+
+  for (const comment of comments) {
+    if (comment.kind === "doc") {
+      docComments.push(comment);
+      continue;
+    }
+
+    flushDocComments();
+    if (comment.kind !== "doc" && !options.preserveComments) continue;
+    const text = comment.text.trim();
+    if (comment.kind === "block") {
+      for (const line of text.split(/\r?\n/)) lines.push(`${indent}${line}`);
+    } else {
+      lines.push(`${indent}${text}`);
+    }
+  }
+  flushDocComments();
+}
+
+function trailingComment(comments: CommentTrivia[], options: Required<GenerateOptions>): string {
+  if (!options.preserveComments || comments.length === 0) return "";
+  return ` ${comments.map((comment) => comment.text.trim()).join(" ")}`;
+}
+
+function pushDocumentationComment(lines: string[], comments: CommentTrivia[], indent: string): void {
+  const text = comments
+    .map((comment) => documentationText(comment.text))
+    .join("\n\n")
+    .trim();
+  if (!text) return;
+
+  lines.push(`${indent}/**`);
+  for (const line of text.split(/\r?\n/)) {
+    lines.push(line ? `${indent} * ${line}` : `${indent} *`);
+  }
+  lines.push(`${indent} */`);
+}
+
+function documentationText(text: string): string {
+  const xml = text
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^\/\/\/\s?/, ""))
+    .join("\n")
+    .trim();
+  return xml
+    .replace(/<summary>\s*([\s\S]*?)\s*<\/summary>/gi, "$1")
+    .replace(/<remarks>\s*([\s\S]*?)\s*<\/remarks>/gi, "\n\n$1")
+    .replace(/<returns>\s*([\s\S]*?)\s*<\/returns>/gi, "\n\n@returns $1")
+    .replace(/<param\s+name="([^"]+)">\s*([\s\S]*?)\s*<\/param>/gi, "\n\n@param $1 $2")
+    .replace(/<[^>]+>/g, "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 function collectImports(node: ClassNode, typeMap: TypeMap): string[] {
@@ -220,6 +304,8 @@ function normalizeOptions(options: GenerateOptions): Required<GenerateOptions> {
     quoteStyle: options.quoteStyle ?? "double",
     semicolons: options.semicolons ?? true,
     normalizeAcronyms: options.normalizeAcronyms ?? false,
+    preserveComments: options.preserveComments ?? false,
+    convertDocumentationComments: options.convertDocumentationComments ?? false,
   };
 }
 

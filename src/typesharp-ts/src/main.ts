@@ -51,6 +51,8 @@ export async function convert(options: CliOptions): Promise<void> {
     quoteStyle: options.quoteStyle,
     semicolons: options.semicolons,
     normalizeAcronyms: options.normalizeAcronyms,
+    preserveComments: options.preserveComments,
+    convertDocumentationComments: options.convertDocumentationComments,
   });
   await mkdir(options.destination, { recursive: true });
   for (const file of files) {
@@ -89,6 +91,8 @@ export function parseArgs(args: string[]): ParsedCliOptions {
     "readonly-properties",
     "semicolons",
     "normalize-acronyms",
+    "preserve-comments",
+    "convert-documentation-comments",
   ]);
   const arrayFlags = new Set(["exclude-pattern", "exclude-patterns"]);
 
@@ -165,6 +169,8 @@ function finalizeOptions(options: ConfigFileOptions): CliOptions {
     quoteStyle: options.quoteStyle,
     semicolons: options.semicolons,
     normalizeAcronyms: options.normalizeAcronyms,
+    preserveComments: options.preserveComments,
+    convertDocumentationComments: options.convertDocumentationComments,
   };
 }
 
@@ -183,6 +189,8 @@ function mapRawOptions(values: Map<string, string | boolean>): ParsedCliOptions 
   setString(options, "quoteStyle", values.get("quote-style"));
   setBoolean(options, "semicolons", values.get("semicolons"));
   setBoolean(options, "normalizeAcronyms", values.get("normalize-acronyms"));
+  setBoolean(options, "preserveComments", values.get("preserve-comments"));
+  setBoolean(options, "convertDocumentationComments", values.get("convert-documentation-comments"));
   return options;
 }
 
