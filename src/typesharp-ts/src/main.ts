@@ -19,18 +19,27 @@ export interface CliOptions extends GenerateOptions {
 export type ConfigFileOptions = Partial<CliOptions>;
 export type ParsedCliOptions = ConfigFileOptions & { configPath?: string };
 
+export interface ConvertSummary {
+  analyzedFiles: number;
+  emittedFiles: number;
+  changedFiles: number;
+  unchangedFiles: number;
+  durationMs: number;
+}
+
 export async function run(args: string[]): Promise<void> {
   const options = await resolveOptions(args);
-  await convert(options);
+  logConvertSummary(await convert(options));
   if (options.watch) {
     console.log(`Watching ${options.source}`);
     for await (const path of watchCSharpFiles(options.source)) {
-      if (path.endsWith(".cs")) await convert(options);
+      if (path.endsWith(".cs")) logConvertSummary(await convert(options));
     }
   }
 }
 
-export async function convert(options: CliOptions): Promise<void> {
+export async function convert(options: CliOptions): Promise<ConvertSummary> {
+  const startedAt = Date.now();
   const sourceFiles = await findCSharpFiles(options.source, options.fileFilter, options.excludePatterns);
   const parsed = [];
   for (const path of sourceFiles) {
@@ -56,9 +65,48 @@ export async function convert(options: CliOptions): Promise<void> {
     inlineInheritedProperties: options.inlineInheritedProperties,
   });
   await mkdir(options.destination, { recursive: true });
+  let changedFiles = 0;
   for (const file of files) {
-    await writeFile(join(options.destination, file.name), file.text);
+    if (await writeTextFileIfChanged(join(options.destination, file.name), file.text)) changedFiles++;
   }
+  return {
+    analyzedFiles: sourceFiles.length,
+    emittedFiles: files.length,
+    changedFiles,
+    unchangedFiles: files.length - changedFiles,
+    durationMs: Date.now() - startedAt,
+  };
+}
+
+async function writeTextFileIfChanged(path: string, text: string): Promise<boolean> {
+  try {
+    const existing = await readFile(path, "utf8");
+    if (normalizeGeneratedText(existing) === normalizeGeneratedText(text)) return false;
+  } catch (error) {
+    if (!isNotFoundError(error)) throw error;
+  }
+  await writeFile(path, text);
+  return true;
+}
+
+function normalizeGeneratedText(text: string): string {
+  return text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n");
+}
+
+function logConvertSummary(summary: ConvertSummary): void {
+  console.table({
+    TypeSharp: {
+      analysed: summary.analyzedFiles,
+      emitted: summary.emittedFiles,
+      changed: summary.changedFiles,
+      unchanged: summary.unchangedFiles,
+      duration: formatDuration(summary.durationMs),
+    },
+  });
+}
+
+function formatDuration(durationMs: number): string {
+  return durationMs < 1000 ? `${durationMs}ms` : `${(durationMs / 1000).toFixed(2)}s`;
 }
 
 export async function resolveOptions(args: string[], cwd = process.cwd()): Promise<CliOptions> {

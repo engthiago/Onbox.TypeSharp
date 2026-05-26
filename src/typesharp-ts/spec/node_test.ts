@@ -389,6 +389,39 @@ test("generates sample outputs for current golden DTOs", async () => {
   }
 });
 
+test("does not rewrite equivalent generated files", async () => {
+  const temp = await mkdtemp(join(tmpdir(), "typesharp-"));
+  try {
+    const source = join(temp, "models");
+    const destination = join(temp, "generated");
+    const csharp = "public class Person { public string Name { get; set; } }";
+    await mkdir(source, { recursive: true });
+    await mkdir(destination, { recursive: true });
+    await writeFile(join(source, "Person.cs"), csharp);
+
+    const expected = generate([parseSourceFile(join(source, "Person.cs"), csharp)])[0].text;
+    const crlfExpected = expected.replace(/\n/g, "\r\n");
+    await writeFile(join(destination, "Person.ts"), crlfExpected);
+
+    const summary = await convert({
+      source,
+      fileFilter: "*.cs",
+      excludePatterns: [],
+      destination,
+      watch: false,
+      exportModule: false,
+    });
+
+    assert.equal(await readFile(join(destination, "Person.ts"), "utf8"), crlfExpected);
+    assert.equal(summary.analyzedFiles, 1);
+    assert.equal(summary.emittedFiles, 1);
+    assert.equal(summary.changedFiles, 0);
+    assert.equal(summary.unchangedFiles, 1);
+  } finally {
+    await rm(temp, { recursive: true, force: true });
+  }
+});
+
 test("supports current CLI arguments", () => {
   assert.deepEqual(
     parseArgs([
