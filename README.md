@@ -4,8 +4,6 @@ Convert C# DTO source files into TypeScript interfaces and enums.
 
 TypeSharp is a Node-powered TypeScript CLI. It reads `.cs` files directly, parses simple DTO models, and writes one `.ts` file per DTO or enum.
 
-![Example Image](src/Onbox.TypeSharp/Example.png)
-
 ## Requirements
 
 - [Node.js](https://nodejs.org/)
