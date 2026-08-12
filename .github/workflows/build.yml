@@ -18,10 +18,16 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22.20.0
         cache: npm
         cache-dependency-path: src/typesharp-ts/package-lock.json
     - name: Install dependencies
       run: npm ci
     - name: Build
       run: npm run build
+    - name: Upload dist artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: typesharp-ts-dist
+        path: src/typesharp-ts/dist
+        if-no-files-found: error

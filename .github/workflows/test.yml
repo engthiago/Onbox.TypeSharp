@@ -18,7 +18,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22.20.0
         cache: npm
         cache-dependency-path: src/typesharp-ts/package-lock.json
     - name: Install dependencies
