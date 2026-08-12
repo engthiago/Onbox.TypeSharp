@@ -152,25 +152,27 @@ function emitProperty(
   options: Required<GenerateOptions>,
 ): void {
   pushComments(lines, prop.leadingComments, "   ", options);
+
+  // Every attribute is parsed onto prop.attributes; the generator composes them
+  // onto a single emit so modifiers stack uniformly (readonly + optional +
+  // nullable + a base type or [TypeUnion] override) rather than short-circuiting.
   const union = typeUnion(prop.attributes, options);
   const readonly = readonlyClass || hasAttribute(prop.attributes, "Readonly") ||
     hasAttribute(prop.attributes, "ReadOnly");
   const prefix = readonly ? "readonly " : "";
-  if (union) {
-    lines.push(
-      `   ${prefix}${propertyName(prop.name, options)}: ${union}${statementEnd(options)}${
-        trailingComment(prop.trailingComments, options)
-      }`,
-    );
-    return;
-  }
-
   const optional = hasAttribute(prop.attributes, "Optional") || prop.type.nullable;
   const nullable = hasAttribute(prop.attributes, "Nullable") ? " | null" : "";
-  let typeName = hasAttribute(prop.attributes, "UnknownObject")
-    ? "unknown"
-    : toTypeScriptType(prop.type, typeOwner, typeMap, options);
-  if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
+
+  let typeName: string;
+  if (union) {
+    typeName = union;
+  } else {
+    typeName = hasAttribute(prop.attributes, "UnknownObject")
+      ? "unknown"
+      : toTypeScriptType(prop.type, typeOwner, typeMap, options);
+    if (hasAttribute(prop.attributes, "Partial")) typeName = `Partial<${typeName}>`;
+  }
+
   lines.push(
     `   ${prefix}${propertyName(prop.name, options)}${optional ? "?" : ""}: ${typeName}${nullable}${
       statementEnd(options)

@@ -59,6 +59,11 @@ namespace Demo {
     public dynamic Payload { get; set; }
     public AccessLevel AccessLevel { get; set; }
     [TypeUnion(1.2, 2.2)] public double Score { get; set; }
+    [Optional] [TypeUnion("type1", "type2")] public string OptionalKind { get; set; }
+    [Nullable] [TypeUnion("type1", "type2")] public string NullableKind { get; set; }
+    [Readonly] [Optional] [TypeUnion("type1", "type2")] public string ReadonlyOptionalKind { get; set; }
+    [Nullable] [TypeUnion("type1", "type2")] public string? QuestionNullableTypeUnions { get; set; }
+    [Nullable] [TypeUnion(1.2, 2.2)] public double? OptionalNullableTypeUnionDouble { get; set; }
   }
 }`,
     ),
@@ -78,6 +83,11 @@ namespace Demo {
   assert.match(person, /numbers: number\[\];/);
   assert.match(person, /payload: any;/);
   assert.match(person, /score: 1\.2 \| 2\.2;/);
+  assert.match(person, /optionalKind\?: "type1" \| "type2";/);
+  assert.match(person, /nullableKind: "type1" \| "type2" \| null;/);
+  assert.match(person, /readonly readonlyOptionalKind\?: "type1" \| "type2";/);
+  assert.match(person, /questionNullableTypeUnions\?: "type1" \| "type2" \| null;/);
+  assert.match(person, /optionalNullableTypeUnionDouble\?: 1\.2 \| 2\.2 \| null;/);
 });
 
 test("supports signed enum values", () => {

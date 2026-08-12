@@ -1,7 +1,7 @@
 {
   "source": "./../../samples/SampleModels",
   "fileFilter": "*.cs",
-  "excludePatterns": [],
+  "excludePatterns": ["obj/*"],
   "typeFilter": "*",
   "destination": "./../../samples/SampleModels/Typescript",
   "watch": false,

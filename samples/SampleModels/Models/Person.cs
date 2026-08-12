@@ -34,8 +34,25 @@ namespace SampleModels.Models
         [TypeUnion("type1", "type2")]
         public string TypeUnions { get; set; }
 
+        [Optional]
+        [TypeUnion("type1", "type2")]
+        public string OptionalTypeUnions { get; set; }
+
+        [Optional]
+        [Nullable]
+        [TypeUnion("type1", "type2")]
+        public string OptionalNullableTypeUnions { get; set; }
+
+        [Nullable]
+        [TypeUnion("type1", "type2")]
+        public string? QuestionNullableTypeUnions { get; set; }
+
         [TypeUnion(1.2, 2.2)]
         public double TypeUnionDouble { get; set; }
+
+        [Nullable]
+        [TypeUnion(1.2, 2.2)]
+        public double? OptionalNullableTypeUnionDouble { get; set; }
 
         public object ShouldBeAny { get; set; }
 
@@ -45,5 +62,6 @@ namespace SampleModels.Models
 
         [Optional] public Dictionary<string, object> Pairs { get; set; }
         [Optional] public Dictionary<string, SubPerson> SubpersonPairs { get; set; }
+
     }
 }

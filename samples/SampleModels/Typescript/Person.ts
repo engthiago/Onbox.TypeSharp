@@ -27,7 +27,11 @@ export interface Person {
    strings2: string[][];
    accessLevel: AccessLevel;
    typeUnions: "type1" | "type2";
+   optionalTypeUnions?: "type1" | "type2";
+   optionalNullableTypeUnions?: "type1" | "type2" | null;
+   questionNullableTypeUnions?: "type1" | "type2" | null;
    typeUnionDouble: 1.2 | 2.2;
+   optionalNullableTypeUnionDouble?: 1.2 | 2.2 | null;
    shouldBeAny: any;
    shouldBeUnknown?: unknown;
    pairs?: Record<string, any>;

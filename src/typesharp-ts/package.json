@@ -7,7 +7,8 @@
   "type": "module",
   "scripts": {
     "test": "npx vitest --passWithNoTests --reporter=verbose",
-    "build": "node esbuild.mjs"
+    "build": "node esbuild.mjs",
+    "sample": "deno run -A --unstable-sloppy-imports src/main.ts"
   },
   "author": "Thiago Almeida",
   "license": "Proprietary",
